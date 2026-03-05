@@ -1,0 +1,2951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chronicle of the Evergrind</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #08070a;
+  --bg2: #0d0b10;
+  --surface: #111019;
+  --surface2: #17151f;
+  --surface3: #1f1c2a;
+  --border: #2e2840;
+  --border-gold: #7a5c1e;
+  --border-bright: #c8971a;
+  --text: #e8dfc0;
+  --text-muted: #8a7a5a;
+  --text-dim: #4a3f2a;
+  --gold: #f0b429;
+  --gold-dim: #7a5c1e;
+  --gold-glow: rgba(240,180,41,0.12);
+  --gold-glow-strong: rgba(240,180,41,0.25);
+  --green: #4ade80;
+  --green-dim: #14381e;
+  --red: #f87171;
+  --red-dim: #3d1414;
+  --blue: #60a5fa;
+  --blue-dim: #0f2040;
+  --purple: #c084fc;
+  --purple-dim: #2d1a4a;
+  --hp: #e53e3e;
+  --mp: #4299e1;
+  --xp: #f0b429;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── BACKGROUND TEXTURE ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(120,80,10,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(60,30,100,0.06) 0%, transparent 50%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%23080710'/%3E%3Crect width='1' height='1' x='0' y='0' fill='%230f0d18' opacity='.4'/%3E%3Crect width='1' height='1' x='2' y='2' fill='%230f0d18' opacity='.4'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── FLOATING PARTICLES ── */
+.particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+.particle {
+  position: absolute;
+  width: 2px; height: 2px;
+  background: var(--gold);
+  border-radius: 50%;
+  opacity: 0;
+  animation: floatUp var(--dur) var(--delay) infinite ease-in;
+}
+@keyframes floatUp {
+  0% { opacity: 0; transform: translateY(0) translateX(0); }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.2; }
+  100% { opacity: 0; transform: translateY(-100vh) translateX(var(--drift)); }
+}
+
+/* ── NAV / HUD ── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: rgba(8,7,10,0.92);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-gold);
+  box-shadow: 0 1px 0 rgba(240,180,41,0.08), 0 4px 30px rgba(0,0,0,0.8);
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-top {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1.5rem;
+  gap: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  min-height: 44px;
+}
+
+.nav-bottom {
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  gap: 2px;
+  height: 38px;
+}
+
+.nav-logo {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gold);
+  text-shadow: 0 0 20px var(--gold-glow-strong);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.hud-bars {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex: 1;
+}
+.hud-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.hud-bar-label { letter-spacing: 0.08em; text-transform: uppercase; min-width: 22px; }
+.hud-bar {
+  width: 80px;
+  height: 8px;
+  background: var(--surface3);
+  border-radius: 2px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  position: relative;
+}
+.hud-bar-fill {
+  height: 100%;
+  border-radius: 1px;
+  transition: width 0.5s ease;
+  position: relative;
+}
+.hud-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 3px; height: 100%;
+  background: rgba(255,255,255,0.5);
+  border-radius: 1px;
+}
+.hud-bar-fill.hp { background: linear-gradient(90deg, #7f1d1d, var(--hp)); }
+.hud-bar-fill.mp { background: linear-gradient(90deg, #1e3a5f, var(--mp)); }
+.hud-bar-fill.xp { background: linear-gradient(90deg, #78450a, var(--xp)); }
+.hud-bar-val { font-size: 10px; color: var(--text-muted); min-width: 28px; }
+
+.level-badge {
+  background: var(--surface2);
+  border: 1px solid var(--border-gold);
+  border-radius: 4px;
+  padding: 0.2rem 0.6rem;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.nav-tabs {
+  display: flex;
+  gap: 2px;
+}
+
+.nav-tab {
+  padding: 0.5rem 1.1rem;
+  border-radius: 3px 3px 0 0;
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  border-bottom: none;
+  background: none;
+  transition: all 0.2s;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  height: 38px;
+  display: flex;
+  align-items: center;
+}
+.nav-tab:hover {
+  color: var(--gold);
+  background: var(--gold-glow);
+  border-color: var(--border-gold);
+  border-bottom-color: transparent;
+}
+.nav-tab.active {
+  color: var(--gold);
+  background: var(--gold-glow);
+  border-color: var(--border-gold);
+  border-bottom-color: transparent;
+  box-shadow: 0 0 12px var(--gold-glow);
+}
+
+/* ── MAIN ── */
+main {
+  padding-top: 86px;
+  max-width: 1440px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+.page { display: none; padding: 2rem; }
+.page.active { display: block; }
+
+/* ── PAGE HEADER ── */
+.page-header {
+  margin-bottom: 2rem;
+  position: relative;
+  padding-bottom: 1rem;
+}
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, var(--border-gold), transparent);
+}
+.page-header h1 {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--gold);
+  text-shadow: 0 0 30px var(--gold-glow-strong);
+  letter-spacing: 0.05em;
+}
+.page-header p {
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+  font-size: 11px;
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+/* ── GRID ── */
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+.grid-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 1rem; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+@media (max-width: 900px) {
+  .grid-3, .grid-2, .grid-1-2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ── CARD / PANEL ── */
+.card {
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+  border: 1px solid var(--border-gold);
+  border-radius: 4px;
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* corner ornaments */
+.card::before, .card::after {
+  content: '';
+  position: absolute;
+  width: 12px; height: 12px;
+  border-color: var(--border-bright);
+  border-style: solid;
+  opacity: 0.6;
+}
+.card::before { top: 4px; left: 4px; border-width: 1px 0 0 1px; }
+.card::after  { bottom: 4px; right: 4px; border-width: 0 1px 1px 0; }
+
+.card-inner-tl, .card-inner-br {
+  position: absolute;
+  width: 8px; height: 8px;
+  border-color: var(--border-gold);
+  border-style: solid;
+  opacity: 0.4;
+}
+.card-inner-tl { top: 4px; right: 4px; border-width: 1px 1px 0 0; }
+.card-inner-br { bottom: 4px; left: 4px; border-width: 0 0 1px 1px; }
+
+/* glow on hover */
+.card:hover {
+  border-color: var(--border-bright);
+  box-shadow: 0 0 20px rgba(120,80,10,0.15), inset 0 0 40px rgba(120,80,10,0.03);
+}
+
+.accent-card {
+  border-color: var(--border-bright);
+  background: linear-gradient(135deg, #110e05, #1a1505);
+  box-shadow: 0 0 30px rgba(240,180,41,0.1);
+}
+
+.card-title {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.card-title .badge {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 2px;
+  background: var(--surface3);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+/* ── STAT CARDS ── */
+.stat-value {
+  font-family: 'Cinzel', serif;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin: 0.5rem 0;
+}
+.stat-label { font-size: 10px; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; }
+.stat-change { font-size: 11px; display: flex; align-items: center; gap: 0.25rem; margin-top: 0.5rem; }
+.stat-change.up { color: var(--green); }
+.stat-change.down { color: var(--red); }
+
+/* ── XP / PROGRESS BARS ── */
+.progress-wrap { margin: 0.75rem 0; }
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+  font-size: 11px;
+}
+.progress-label span:first-child { color: var(--text); font-family: 'Share Tech Mono', monospace; }
+.progress-label span:last-child { color: var(--text-muted); }
+
+.progress-bar {
+  height: 10px;
+  background: var(--surface3);
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  position: relative;
+}
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 8px,
+    rgba(0,0,0,0.15) 8px,
+    rgba(0,0,0,0.15) 9px
+  );
+  pointer-events: none;
+}
+.progress-fill {
+  height: 100%;
+  transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+}
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 4px; height: 100%;
+  background: rgba(255,255,255,0.4);
+}
+.fill-accent, .fill-gold { background: linear-gradient(90deg, #78450a, var(--gold)); box-shadow: 0 0 8px rgba(240,180,41,0.4); }
+.fill-green { background: linear-gradient(90deg, #14381e, var(--green)); box-shadow: 0 0 6px rgba(74,222,128,0.3); }
+.fill-yellow { background: linear-gradient(90deg, #78450a, #fbbf24); box-shadow: 0 0 6px rgba(251,191,36,0.3); }
+.fill-red { background: linear-gradient(90deg, #4a1010, var(--red)); box-shadow: 0 0 6px rgba(248,113,113,0.3); }
+.fill-blue { background: linear-gradient(90deg, #0f2040, var(--blue)); box-shadow: 0 0 6px rgba(96,165,250,0.3); }
+
+/* ── FORM ELEMENTS ── */
+.form-row { display: flex; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.form-group { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 120px; }
+.form-group label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: 'Cinzel', serif;
+}
+
+input, select, textarea {
+  background: var(--surface2);
+  border: 1px solid var(--border-gold);
+  border-radius: 3px;
+  color: var(--text);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  padding: 0.55rem 0.8rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--gold-glow), 0 0 12px var(--gold-glow);
+}
+select option { background: var(--surface2); color: var(--text); }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 3px;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  border: 1px solid;
+  transition: all 0.2s;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #5a3a05, #8a5a0a);
+  color: var(--gold);
+  border-color: var(--border-gold);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, #7a5010, #b07510);
+  border-color: var(--border-bright);
+  box-shadow: 0 0 16px var(--gold-glow-strong);
+  transform: translateY(-1px);
+}
+.btn-ghost {
+  background: var(--surface2);
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+.btn-ghost:hover { background: var(--surface3); color: var(--text); border-color: var(--border-gold); }
+.btn-danger {
+  background: var(--red-dim);
+  color: var(--red);
+  border-color: rgba(248,113,113,0.3);
+}
+.btn-danger:hover { background: #5a1a1a; box-shadow: 0 0 8px rgba(248,113,113,0.2); }
+.btn-sm { padding: 0.3rem 0.65rem; font-size: 10px; }
+
+/* ── TABLES ── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left;
+  font-size: 10px;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-gold);
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+}
+td {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text);
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(240,180,41,0.03); }
+
+/* ── TAGS ── */
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.tag-green  { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(74,222,128,0.3); }
+.tag-red    { background: var(--red-dim);    color: var(--red);    border: 1px solid rgba(248,113,113,0.3); }
+.tag-yellow { background: #3d2e0a;           color: #fbbf24;       border: 1px solid rgba(251,191,36,0.3); }
+.tag-blue   { background: var(--blue-dim);   color: var(--blue);   border: 1px solid rgba(96,165,250,0.3); }
+.tag-purple { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(192,132,252,0.3); }
+.tag-gold   { background: #3d2a05;           color: var(--gold);   border: 1px solid var(--border-gold); }
+
+/* ── UTILITY ── */
+.green  { color: var(--green); }
+.red    { color: var(--red); }
+.gold   { color: var(--gold); }
+.yellow { color: #fbbf24; }
+.blue   { color: var(--blue); }
+.muted  { color: var(--text-muted); }
+.mono   { font-family: 'Share Tech Mono', monospace; }
+.divider { height: 1px; background: linear-gradient(90deg, var(--border-gold), transparent); margin: 1.25rem 0; }
+.section-gap { margin-bottom: 1.25rem; }
+
+/* ── EMPTY STATE ── */
+.empty {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--text-dim);
+  font-size: 12px;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.05em;
+}
+.empty-icon { font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.3; display: block; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4,3,8,0.85);
+  backdrop-filter: blur(6px);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: linear-gradient(160deg, #0f0d18, #151220);
+  border: 1px solid var(--border-gold);
+  border-radius: 4px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  box-shadow: 0 0 60px rgba(0,0,0,0.8), 0 0 30px rgba(120,80,10,0.15);
+}
+.modal::before, .modal::after {
+  content: '';
+  position: absolute;
+  width: 14px; height: 14px;
+  border-color: var(--border-bright);
+  border-style: solid;
+  opacity: 0.7;
+}
+.modal::before { top: 6px; left: 6px; border-width: 2px 0 0 2px; }
+.modal::after  { bottom: 6px; right: 6px; border-width: 0 2px 2px 0; }
+.modal-title {
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 1.5rem;
+  text-shadow: 0 0 20px var(--gold-glow-strong);
+  letter-spacing: 0.05em;
+}
+.modal-close {
+  position: absolute;
+  top: 1rem; right: 1rem;
+  background: var(--surface2);
+  border: 1px solid var(--border-gold);
+  color: var(--text-muted);
+  width: 28px; height: 28px;
+  border-radius: 3px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  font-family: 'Cinzel', serif;
+  transition: all 0.2s;
+}
+.modal-close:hover { color: var(--gold); border-color: var(--border-bright); box-shadow: 0 0 8px var(--gold-glow); }
+
+/* ── CALENDAR ── */
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-header-cell {
+  text-align: center;
+  font-size: 10px;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.5rem 0;
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+}
+.cal-cell {
+  aspect-ratio: 1;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+  font-size: 12px;
+  position: relative;
+  font-family: 'Share Tech Mono', monospace;
+}
+.cal-cell:hover { background: var(--gold-glow); border-color: var(--border-gold); }
+.cal-cell.today {
+  background: var(--gold-glow);
+  border-color: var(--border-bright);
+  color: var(--gold);
+  font-weight: 700;
+  box-shadow: 0 0 12px var(--gold-glow);
+}
+.cal-cell.other-month { color: var(--text-dim); }
+.cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.cal-nav h2 { font-family: 'Cinzel', serif; font-weight: 700; font-size: 14px; color: var(--gold); letter-spacing: 0.06em; }
+
+/* ── EVENT LIST ── */
+.event-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.event-item:last-child { border-bottom: none; }
+.event-dot {
+  width: 8px; height: 8px;
+  border-radius: 1px;
+  margin-top: 5px;
+  flex-shrink: 0;
+  transform: rotate(45deg);
+}
+.event-info { flex: 1; }
+.event-title { font-size: 12px; font-weight: 600; font-family: 'Share Tech Mono', monospace; }
+.event-meta { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+/* ── HEALTH ── */
+.workout-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: var(--surface2);
+  border-radius: 3px;
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--border);
+}
+.workout-icon {
+  width: 36px; height: 36px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  background: var(--surface3);
+  border: 1px solid var(--border-gold);
+}
+.macro-bar { display: flex; gap: 0.5rem; margin: 0.5rem 0; }
+.macro-pill {
+  flex: 1;
+  background: var(--surface3);
+  border-radius: 3px;
+  padding: 0.6rem;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+.macro-pill .val { font-family: 'Cinzel', serif; font-weight: 700; font-size: 16px; }
+.macro-pill .lbl { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; font-family: 'Cinzel', serif; }
+
+/* ── MEAL SLOTS ── */
+.meal-slot {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+.meal-slot-header {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+}
+.meal-item-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.meal-item-line:last-child { border-bottom: none; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-gold); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-bright); }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes goldPulse {
+  0%, 100% { box-shadow: 0 0 8px var(--gold-glow); }
+  50%       { box-shadow: 0 0 20px var(--gold-glow-strong); }
+}
+.page.active .card { animation: fadeUp 0.4s ease both; }
+.page.active .card:nth-child(1) { animation-delay: 0ms; }
+.page.active .card:nth-child(2) { animation-delay: 70ms; }
+.page.active .card:nth-child(3) { animation-delay: 140ms; }
+.accent-card { animation: goldPulse 4s ease infinite; }
+
+/* ── RPG LOOT NOTIFICATION ── */
+.loot-toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: linear-gradient(135deg, #1a1505, #2a2008);
+  border: 1px solid var(--border-bright);
+  border-radius: 4px;
+  padding: 0.85rem 1.25rem;
+  color: var(--gold);
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  z-index: 300;
+  box-shadow: 0 0 30px var(--gold-glow-strong);
+  transform: translateX(120%);
+  transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+  max-width: 280px;
+}
+.loot-toast.show { transform: translateX(0); }
+.loot-toast .toast-icon { font-size: 16px; margin-right: 0.5rem; }
+
+/* ── SYNC BADGE ── */
+.sync-badge {
+  font-size: 10px;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.05em;
+  padding: 0.25rem 0.65rem;
+  border-radius: 3px;
+  border: 1px solid;
+  white-space: nowrap;
+  transition: all 0.3s;
+}
+.sync-idle    { color: var(--text-dim);   border-color: var(--border);       background: var(--surface2); }
+.sync-saving  { color: #fbbf24;           border-color: rgba(251,191,36,0.4); background: #3d2e0a; }
+.sync-saved   { color: var(--green);      border-color: rgba(74,222,128,0.4); background: var(--green-dim); }
+.sync-error   { color: var(--red);        border-color: rgba(248,113,113,0.4);background: var(--red-dim); }
+.sync-loading { color: var(--blue);       border-color: rgba(96,165,250,0.4); background: var(--blue-dim); }
+
+/* ── SETTINGS MODAL SPECIFICS ── */
+.settings-section {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.settings-section:last-child { border-bottom: none; margin-bottom: 0; }
+.settings-section-title {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.75rem;
+}
+.settings-hint {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 0.4rem;
+  line-height: 1.5;
+}
+.settings-hint a { color: var(--gold); text-decoration: none; }
+.settings-hint a:hover { text-decoration: underline; }
+
+
+.debt-ring-wrap { display:flex; justify-content:center; align-items:center; padding:1rem 0; }
+.debt-ring { position:relative; width:120px; height:120px; }
+.debt-ring svg { transform: rotate(-90deg); }
+.debt-ring-label { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:'Cinzel',serif; }
+.debt-ring-label .pct { font-size:22px; font-weight:700; }
+.debt-ring-label .sub { font-size:9px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em; }
+
+/* ── SECTION DIVIDERS WITH RUNES ── */
+.rune-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+.rune-divider::before, .rune-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-gold), transparent);
+}
+</style>
+</head>
+<body>
+
+<!-- PARTICLES -->
+<div class="particles" id="particles"></div>
+
+<!-- NAV / HUD -->
+<nav>
+  <div class="nav-top">
+    <div class="nav-logo">⚔ Chronicle</div>
+    <div class="hud-bars">
+      <div class="hud-bar-wrap">
+        <span class="hud-bar-label" style="color:var(--hp)">HP</span>
+        <div class="hud-bar"><div class="hud-bar-fill hp" id="hud-hp" style="width:82%"></div></div>
+        <span class="hud-bar-val" style="color:var(--hp)" id="hud-hp-val">82</span>
+      </div>
+      <div class="hud-bar-wrap">
+        <span class="hud-bar-label" style="color:var(--mp)">MP</span>
+        <div class="hud-bar"><div class="hud-bar-fill mp" id="hud-mp" style="width:65%"></div></div>
+        <span class="hud-bar-val" style="color:var(--mp)" id="hud-mp-val">65</span>
+      </div>
+      <div class="hud-bar-wrap">
+        <span class="hud-bar-label" style="color:var(--xp)">XP</span>
+        <div class="hud-bar"><div class="hud-bar-fill xp" id="hud-xp" style="width:40%"></div></div>
+        <span class="hud-bar-val" style="color:var(--xp)" id="hud-xp-val">40%</span>
+      </div>
+    </div>
+    <div class="level-badge" id="player-level">LVL 1</div>
+    <div id="user-display" style="font-size:10px;color:var(--text-muted);font-family:'Cinzel',serif;letter-spacing:0.04em;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+    <div id="sync-status" class="sync-badge sync-idle" title="Firebase sync status">⬡ Not connected</div>
+    <button class="btn btn-ghost btn-sm" onclick="openModal('modal-settings')" title="Firebase Settings">⚙ Sync</button>
+    <button class="btn btn-ghost btn-sm" onclick="authSignOut()" title="Sign out" id="signout-btn">↪ Sign Out</button>
+  </div>
+  <div class="nav-bottom">
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showPage('finance', this)">⚖ Finance</button>
+      <button class="nav-tab" onclick="showPage('calendar', this)">📜 Calendar</button>
+      <button class="nav-tab" onclick="showPage('health', this)">⚔ Health</button>
+      <button class="nav-tab" onclick="showPage('meals', this)">🍖 Meals</button>
+    </div>
+  </div>
+</nav>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen" style="display:none;position:fixed;inset:0;z-index:500;background:var(--bg);align-items:center;justify-content:center;padding:1rem">
+  <div style="width:100%;max-width:400px">
+    <!-- Logo -->
+    <div style="text-align:center;margin-bottom:2rem">
+      <div style="font-family:'Cinzel Decorative',serif;font-size:22px;font-weight:700;color:var(--gold);text-shadow:0 0 30px var(--gold-glow-strong);letter-spacing:0.05em">⚔ Chronicle</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:0.4rem;font-family:'Cinzel',serif;letter-spacing:0.08em;text-transform:uppercase">of the Evergrind</div>
+    </div>
+
+    <!-- Card -->
+    <div class="card" style="border-color:var(--border-bright);box-shadow:0 0 40px rgba(120,80,10,0.2)">
+      <div id="auth-mode" data-mode="login">
+        <div class="card-title" style="justify-content:center;font-size:14px;margin-bottom:1.5rem">
+          <span id="auth-title">Sign In</span>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0.75rem">
+          <label>Email</label>
+          <input type="email" id="auth-email" placeholder="adventurer@realm.com" onkeydown="if(event.key==='Enter')authSignIn()">
+        </div>
+        <div class="form-group" style="margin-bottom:0.25rem">
+          <label>Password</label>
+          <input type="password" id="auth-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')authSignIn()">
+        </div>
+
+        <div style="text-align:right;margin-bottom:1rem">
+          <button class="btn btn-ghost btn-sm" style="border:none;background:none;color:var(--text-muted);font-size:10px;padding:0.2rem 0" onclick="authResetPassword()">Forgot password?</button>
+        </div>
+
+        <div id="auth-error" style="display:none;background:var(--red-dim);border:1px solid rgba(248,113,113,0.3);border-radius:3px;padding:0.6rem 0.8rem;font-size:11px;color:var(--red);margin-bottom:1rem"></div>
+
+        <button id="auth-submit-btn" class="btn btn-primary" style="width:100%;justify-content:center;padding:0.65rem" onclick="authSignIn()">Sign In</button>
+
+        <div style="text-align:center;margin-top:1.25rem;font-size:10px;color:var(--text-dim)">
+          No Firebase config yet?
+          <button class="btn btn-ghost btn-sm" style="border:none;background:none;color:var(--text-muted);font-size:10px;padding:0 0.3rem" onclick="document.getElementById('auth-screen').style.display='none';openModal('modal-settings')">Configure Firebase →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP WRAPPER -->
+<div id="app-wrapper">
+<main>
+
+<!-- ═══════════════ FINANCE / TREASURY ═══════════════ -->
+<section id="page-finance" class="page active">
+  <div class="page-header">
+    <h1>⚖ Finance</h1>
+    <p>// Manage your gold, debts, and the coffers of your domain</p>
+  </div>
+
+  <div class="grid-3 section-gap">
+    <div class="card accent-card">
+      <div class="card-title">Net Worth</div>
+      <div class="stat-value gold" id="net-worth">0 GP</div>
+      <div class="stat-label">Total Assets − Liabilities</div>
+      <div class="stat-change up" id="net-worth-change">— awaiting ledger entries</div>
+    </div>
+    <div class="card">
+      <div class="card-title">This Month</div>
+      <div class="stat-value green" id="budget-remaining">0 GP</div>
+      <div class="stat-label" id="budget-remaining-label">Remaining coffers</div>
+      <div class="progress-wrap" style="margin-top:0.75rem">
+        <div class="progress-bar"><div class="progress-fill fill-gold" id="budget-bar" style="width:0%"></div></div>
+      </div>
+      <div style="margin-top:0.5rem;display:flex;justify-content:space-between;font-size:11px">
+        <span class="green" id="summary-income-label">Earned: 0 GP</span>
+        <span class="red"   id="summary-expense-label">Spent: 0 GP</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Total Debt</div>
+      <div class="stat-value red" id="total-debt">0 GP</div>
+      <div class="stat-label">Owed across all creditors</div>
+      <div class="stat-change muted" id="debt-paid">Log payments to track progress</div>
+    </div>
+  </div>
+
+  <!-- BUDGET + EXPENSES -->
+  <div class="grid-2 section-gap">
+    <div class="card">
+      <div class="card-title">
+        Budget Categories
+        <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-budget')">+ Add</button>
+      </div>
+      <div id="budget-list">
+        <div class="empty"><span class="empty-icon">📊</span>No budget categories yet</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        Expenses
+        <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-expense')">+ Spend</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th></th></tr></thead>
+          <tbody id="expense-body">
+            <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-dim)">No expenses logged</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- BILLS -->
+  <div class="card section-gap">
+    <div class="card-title">
+      Bills
+      <div style="display:flex;align-items:center;gap:0.5rem">
+        <span class="badge" id="bills-due-badge" style="display:none;background:var(--red-dim);color:var(--red);border-color:rgba(248,113,113,0.3)"></span>
+        <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-bill')">+ Add</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Bill</th><th>Category</th><th>Amount</th><th>Due Day</th><th>Recurrence</th><th>Status</th><th></th></tr></thead>
+        <tbody id="bills-body">
+          <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-dim)">No bills added — bills will auto-log as expenses on their due date</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-gold);display:flex;justify-content:space-between;align-items:center">
+      <span class="muted" style="font-size:11px;font-family:'Cinzel',serif;letter-spacing:0.06em;text-transform:uppercase">Monthly Bills Total</span>
+      <span class="red" style="font-family:'Cinzel',serif;font-weight:700;font-size:18px" id="total-bills-display">0 GP/mo</span>
+    </div>
+  </div>
+
+  <!-- SAVINGS + DEBT -->
+  <div class="grid-2 section-gap">
+    <div class="card">
+      <div class="card-title">
+        Savings Goals
+        <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-saving')">+ Add</button>
+      </div>
+      <div id="savings-list">
+        <div class="empty"><span class="empty-icon">🎯</span>No savings goals yet</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        Debt Tracker
+        <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-debt')">+ Debt</button>
+      </div>
+      <div id="debt-list">
+        <div class="empty"><span class="empty-icon">💀</span>No debts added</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ASSETS -->
+  <div class="card section-gap">
+    <div class="card-title">
+      Assets
+      <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-asset')">+ Asset</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Asset</th><th>Type</th><th>Value</th><th>Notes</th><th></th></tr></thead>
+        <tbody id="asset-body">
+          <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-dim)">No assets added</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-gold);display:flex;justify-content:space-between;align-items:center">
+      <span class="muted" style="font-size:11px;font-family:'Cinzel',serif;letter-spacing:0.06em;text-transform:uppercase">Total Assets</span>
+      <span class="green" style="font-family:'Cinzel',serif;font-weight:700;font-size:18px" id="total-assets-display">0 GP</span>
+    </div>
+  </div>
+
+  <!-- INCOME -->
+  <div class="card section-gap">
+    <div class="card-title">
+      Income
+      <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-income')">+ Log Gold</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Source</th><th>Type</th><th>Amount</th><th>Notes</th><th></th></tr></thead>
+        <tbody id="income-body">
+          <tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--text-dim)">No income logged yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-gold);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem">
+      <div style="display:flex;gap:2rem">
+        <div>
+          <div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;font-family:'Cinzel',serif">This Cycle</div>
+          <div class="green" style="font-family:'Cinzel',serif;font-weight:700;font-size:18px" id="income-this-month">0 GP</div>
+        </div>
+        <div>
+          <div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;font-family:'Cinzel',serif">All Time</div>
+          <div class="gold" style="font-family:'Cinzel',serif;font-weight:700;font-size:18px" id="income-all-time">0 GP</div>
+        </div>
+      </div>
+      <div id="income-vs-expenses" style="font-size:11px;color:var(--text-muted)">—</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ CALENDAR / QUEST LOG ═══════════════ -->
+<section id="page-calendar" class="page">
+  <div class="page-header">
+    <h1>📜 Calendar</h1>
+    <p>// Active quests, deadlines, and scheduled encounters</p>
+  </div>
+  <div class="grid-1-2">
+    <div class="card">
+      <div class="card-title">
+        Upcoming Events
+        <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-event')">+ Event</button>
+      </div>
+      <div id="event-list">
+        <div class="empty"><span class="empty-icon">📅</span>No events yet</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="cal-nav">
+        <button class="btn btn-ghost btn-sm" onclick="calNav(-1)">← Prev</button>
+        <h2 id="cal-title">Month Year</h2>
+        <button class="btn btn-ghost btn-sm" onclick="calNav(1)">Next →</button>
+      </div>
+      <div class="cal-grid" id="cal-header"></div>
+      <div style="height:8px"></div>
+      <div class="cal-grid" id="cal-body"></div>
+      <div style="margin-top:1rem;display:flex;gap:1rem;font-size:10px;color:var(--text-muted)">
+        <span>🟥 Bill due &nbsp; 🟣 Event</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ HEALTH / COMBAT ═══════════════ -->
+<section id="page-health" class="page">
+  <div class="page-header">
+    <h1>⚔ Health & Fitness</h1>
+    <p>// Physical prowess, training log, and body metrics</p>
+  </div>
+  <div class="grid-3 section-gap">
+    <div class="card">
+      <div class="card-title">Weekly Workouts</div>
+      <div class="stat-value gold" id="workouts-this-week" style="color:var(--gold)">0</div>
+      <div class="stat-label">Sessions this week</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Total Volume</div>
+      <div class="stat-value" id="total-volume">0</div>
+      <div class="stat-label">kg lifted this week</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Streak</div>
+      <div class="stat-value" id="streak-count" style="color:#fbbf24">0</div>
+      <div class="stat-label">Day streak 🔥</div>
+    </div>
+  </div>
+  <div class="grid-2 section-gap">
+    <div class="card">
+      <div class="card-title">
+        Workout Log
+        <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-workout')">+ Log</button>
+      </div>
+      <div id="workout-list">
+        <div class="empty"><span class="empty-icon">🏋️</span>No workouts logged</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Body Metrics</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Weight (kg)</label>
+          <input type="number" id="metric-weight" placeholder="75.0" onchange="updateMetrics()">
+        </div>
+        <div class="form-group">
+          <label>Height (cm)</label>
+          <input type="number" id="metric-height" placeholder="175" onchange="updateMetrics()">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Body Fat %</label>
+          <input type="number" id="metric-bf" placeholder="15.0" onchange="updateMetrics()">
+        </div>
+        <div class="form-group">
+          <label>Resting HR (bpm)</label>
+          <input type="number" id="metric-hr" placeholder="60" onchange="updateMetrics()">
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div id="metric-results" style="color:var(--text-muted);font-size:12px">Enter attributes to see stat calculations.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ MEALS / RATIONS ═══════════════ -->
+<section id="page-meals" class="page">
+  <div class="page-header">
+    <h1>🍖 Meal Planning</h1>
+    <p>// Fuel your body for the battles ahead</p>
+  </div>
+  <div class="grid-3 section-gap">
+    <div class="card">
+      <div class="card-title">Calories Today</div>
+      <div class="stat-value gold" id="cal-today">0</div>
+      <div class="stat-label">of <span id="cal-goal">2000</span> kcal target</div>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill fill-yellow" id="cal-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Macros Today</div>
+      <div class="macro-bar">
+        <div class="macro-pill">
+          <div class="val green" id="macro-p">0g</div>
+          <div class="lbl">Protein</div>
+        </div>
+        <div class="macro-pill">
+          <div class="val yellow" id="macro-c">0g</div>
+          <div class="lbl">Carbs</div>
+        </div>
+        <div class="macro-pill">
+          <div class="val blue" id="macro-f">0g</div>
+          <div class="lbl">Fats</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Daily Targets</div>
+      <div class="form-group">
+        <label>Energy Target (kcal)</label>
+        <input type="number" id="cal-goal-input" value="2000" placeholder="2000" onchange="updateCalGoal()">
+      </div>
+      <div class="form-group" style="margin-top:0.5rem">
+        <label>Protein Target (g)</label>
+        <input type="number" id="protein-goal-input" value="150" placeholder="150">
+      </div>
+    </div>
+  </div>
+  <div class="grid-2 section-gap">
+    <div class="card">
+      <div class="card-title">
+        Today's Meals
+        <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-meal')">+ Eat</button>
+      </div>
+      <div id="meal-slots"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        Food Log
+        <span class="badge" id="food-count-badge">0 items</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Food</th><th>Meal</th><th>Kcal</th><th>P/C/F</th><th></th></tr></thead>
+          <tbody id="food-log-body">
+            <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-dim)">No foods logged</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+</div> <!-- end app-wrapper -->
+
+<!-- ═══════ MODALS ═══════ -->
+
+<!-- Add Budget Category -->
+<div class="modal-overlay" id="modal-add-budget">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-add-budget')">✕</button>
+    <div class="modal-title">Add Budget Category</div>
+    <div class="form-group section-gap">
+      <label>Category Name</label>
+      <input type="text" id="b-name" placeholder="e.g. Groceries, Transport">
+    </div>
+    <div class="two-col">
+      <div class="form-group">
+        <label>Budget Limit ($)</label>
+        <input type="number" id="b-limit" placeholder="500">
+      </div>
+      <div class="form-group">
+        <label>Color</label>
+        <select id="b-color">
+          <option value="gold">Gold</option>
+          <option value="green">Emerald</option>
+          <option value="yellow">Amber</option>
+          <option value="blue">Sapphire</option>
+          <option value="red">Ruby</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-budget')">Cancel</button>
+      <button class="btn btn-primary" onclick="addBudgetCategory()">Add Category</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Expense -->
+<div class="modal-overlay" id="modal-add-expense">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-add-expense')">✕</button>
+    <div class="modal-title">💰 Record Expenses</div>
+    <div class="form-group section-gap">
+      <label>Description</label>
+      <input type="text" id="e-desc" placeholder="e.g. Sword maintenance, inn stay">
+    </div>
+    <div class="two-col">
+      <div class="form-group">
+        <label>Amount ($)</label>
+        <input type="number" id="e-amount" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="e-cat"><option value="">Uncategorized</option></select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:0.75rem">
+      <label>Date</label>
+      <input type="date" id="e-date">
+    </div>
+    <div style="margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-expense')">Cancel</button>
+      <button class="btn btn-primary" onclick="addExpense()">Record Spend</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Saving Goal -->
+<div class="modal-overlay" id="modal-add-saving">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-add-saving')">✕</button>
+    <div class="modal-title">New Savings Goal</div>
+    <div class="form-group section-gap">
+      <label>Goal Name</label>
+      <input type="text" id="s-name" placeholder="e.g. Emergency Fund">
+    </div>
+    <div class="two-col">
+      <div class="form-group">
+        <label>Target ($)</label>
+        <input type="number" id="s-target" placeholder="10000">
+      </div>
+      <div class="form-group">
+        <label>Saved So Far ($)</label>
+        <input type="number" id="s-current" placeholder="0">
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:0.75rem">
+      <label>Target Date</label>
+      <input type="date" id="s-date">
+    </div>
+    <div style="margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-saving')">Cancel</button>
+      <button class="btn btn-primary" onclick="addSaving()">Add Goal</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Debt -->
+<div class="modal-overlay" id="modal-add-debt">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-add-debt')">✕</button>
+    <div class="modal-title">Add Debt</div>
+    <div class="form-group section-gap">
+      <label>Creditor / Debt Name</label>
+      <input type="text" id="d-name" placeholder="e.g. Student Loan">
+    </div>
+    <div class="two-col">
+      <div class="form-group">
+        <label>Total Owed ($)</label>
+        <input type="number" id="d-total" placeholder="15000">
+      </div>
+      <div class="form-group">
+        <label>Remaining ($)</label>
+        <input type="number" id="d-remaining" placeholder="15000">
+      </div>
+    </div>
+    <div class="two-col" style="margin-top:0.75rem">
+      <div class="form-group">
+        <label>Interest Rate (%)</label>
+        <input type="number" id="d-rate" placeholder="5.5">
+      </div>
+      <div class="form-group">
+        <label>Debt Type</label>
+        <select id="d-type">
+          <option>Student Loan</option>
+          <option>Credit Card</option>
+          <option>Mortgage</option>
+          <option>Auto Loan</option>
+          <option>Personal Loan</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-debt')">Cancel</button>
+      <button class="btn btn-primary" onclick="addDebt()">Record Debt</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Income -->
+<div class="modal-overlay" id="modal-add-income">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-add-income')">✕</button>
+    <div class="modal-title">🪙 Log Income</div>
+    <div class="form-group section-gap">
+      <label>Source</label>
+      <input type="text" id="i-name" placeholder="e.g. Employer, Client, Freelance">
+    </div>
+    <div class="two-col">
+      <div class="form-group">
+        <label>Amount ($)</label>
+        <input type="number" id="i-amount" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="i-date">
+      </div>
+    </div>
+    <div class="two-col" style="margin-top:0.75rem">
+      <div class="form-group">
+        <label>Type</label>
+        <select id="i-type">
+          <option>Salary</option>
+          <option>Freelance</option>
+          <option>Investment</option>
+          <option>Side Hustle</option>
+          <option>Bonus</option>
+          <option>Gift</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Notes (optional)</label>
+        <input type="text" id="i-notes" placeholder="Invoice #, project, etc.">
+      </div>
+    </div>
+    <div style="margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-income')">Cancel</button>
+      <button class="btn btn-primary" onclick="addIncome()">Log Gold</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Bill -->
+<div class="modal-overlay" id="modal-add-bill">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-add-bill')">✕</button>
+    <div class="modal-title">Add Bill</div>
+    <div class="form-group section-gap">
+      <label>Bill Name</label>
+      <input type="text" id="bill-name" placeholder="e.g. Netflix, Rent, Electric">
+    </div>
+    <div class="two-col">
+      <div class="form-group">
+        <label>Amount ($)</label>
+        <input type="number" id="bill-amount" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label>Due Day of Month</label>
+        <input type="number" id="bill-day" placeholder="1–28" min="1" max="28">
+      </div>
+    </div>
+    <div class="two-col" style="margin-top:0.75rem">
+      <div class="form-group">
+        <label>Category</label>
+        <select id="bill-cat">
+          <option>Housing</option>
+          <option>Utilities</option>
+          <option>Subscriptions</option>
+          <option>Insurance</option>
+          <option>Transport</option>
+          <option>Debt Payment</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Recurrence</label>
+        <select id="bill-recur">
+          <option>Monthly</option>
+          <option>Bi-monthly</option>
+          <option>Quarterly</option>
+          <option>Annual</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-bill')">Cancel</button>
+      <button class="btn btn-primary" onclick="addBill()">Add Bill</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Asset -->
+<div class="modal-overlay" id="modal-add-asset">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-add-asset')">✕</button>
+    <div class="modal-title">Add Asset</div>
+    <div class="form-group section-gap">
+      <label>Asset Name</label>
+      <input type="text" id="a-name" placeholder="e.g. Checking Account, Tesla, House">
+    </div>
+    <div class="two-col">
+      <div class="form-group">
+        <label>Type</label>
+        <select id="a-type">
+          <option>Cash / Bank</option>
+          <option>Investment</option>
+          <option>Real Estate</option>
+          <option>Vehicle</option>
+          <option>Retirement (401k/IRA)</option>
+          <option>Crypto</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Current Value ($)</label>
+        <input type="number" id="a-value" placeholder="0.00">
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:0.75rem">
+      <label>Notes (optional)</label>
+      <input type="text" id="a-notes" placeholder="e.g. Chase savings, Fidelity brokerage">
+    </div>
+    <div style="margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-asset')">Cancel</button>
+      <button class="btn btn-primary" onclick="addAsset()">Add Asset</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Event -->
+<div class="modal-overlay" id="modal-add-event">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-add-event')">✕</button>
+    <div class="modal-title">Add Event</div>
+    <div class="form-group section-gap">
+      <label>Event Title</label>
+      <input type="text" id="ev-title" placeholder="e.g. Doctor Appointment">
+    </div>
+    <div class="two-col">
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="ev-date">
+      </div>
+      <div class="form-group">
+        <label>Time</label>
+        <input type="time" id="ev-time">
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:0.75rem">
+      <label>Category</label>
+      <select id="ev-cat">
+        <option value="purple">Personal</option>
+        <option value="green">Health</option>
+        <option value="blue">Work</option>
+        <option value="yellow">Finance</option>
+        <option value="red">Urgent</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin-top:0.75rem">
+      <label>Notes</label>
+      <textarea id="ev-notes" rows="2" placeholder="Optional details..."></textarea>
+    </div>
+    <div style="margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-event')">Cancel</button>
+      <button class="btn btn-primary" onclick="addEvent()">Add Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Workout -->
+<div class="modal-overlay" id="modal-add-workout">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-add-workout')">✕</button>
+    <div class="modal-title">Log Workout</div>
+    <div class="form-group section-gap">
+      <label>Training Name</label>
+      <input type="text" id="w-name" placeholder="e.g. Upper Body Push, Endurance Run">
+    </div>
+    <div class="two-col">
+      <div class="form-group">
+        <label>Type</label>
+        <select id="w-type">
+          <option value="🏋️">Weights</option>
+          <option value="🏃">Cardio</option>
+          <option value="🧘">Yoga/Stretch</option>
+          <option value="🚴">Cycling</option>
+          <option value="🏊">Swimming</option>
+          <option value="⚽">Sport</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Duration (min)</label>
+        <input type="number" id="w-duration" placeholder="60">
+      </div>
+    </div>
+    <div class="two-col" style="margin-top:0.75rem">
+      <div class="form-group">
+        <label>Volume (kg total)</label>
+        <input type="number" id="w-volume" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="w-date">
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:0.75rem">
+      <label>Session Notes</label>
+      <textarea id="w-notes" rows="2" placeholder="PRs, feelings, exercises..."></textarea>
+    </div>
+    <div style="margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-workout')">Cancel</button>
+      <button class="btn btn-primary" onclick="addWorkout()">Log Training</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Food -->
+<div class="modal-overlay" id="modal-add-meal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-add-meal')">✕</button>
+    <div class="modal-title">Log Food</div>
+    <div class="form-group section-gap">
+      <label>Food Name</label>
+      <input type="text" id="f-name" placeholder="e.g. Chicken Breast">
+    </div>
+    <div class="form-group" style="margin-bottom:0.75rem">
+      <label>Meal</label>
+      <select id="f-meal">
+        <option>Breakfast</option>
+        <option>Lunch</option>
+        <option>Dinner</option>
+        <option>Snack</option>
+      </select>
+    </div>
+    <div class="two-col">
+      <div class="form-group">
+        <label>Energy (kcal)</label>
+        <input type="number" id="f-cal" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label>Protein (g)</label>
+        <input type="number" id="f-protein" placeholder="0">
+      </div>
+    </div>
+    <div class="two-col" style="margin-top:0.75rem">
+      <div class="form-group">
+        <label>Carbs (g)</label>
+        <input type="number" id="f-carbs" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label>Fats (g)</label>
+        <input type="number" id="f-fats" placeholder="0">
+      </div>
+    </div>
+    <div style="margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-meal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addFood()">Consume</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings / Firebase Modal -->
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal" style="max-width:520px">
+    <button class="modal-close" onclick="closeModal('modal-settings')">✕</button>
+    <div class="modal-title">⚙ Firebase Sync Settings</div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Connection Status</div>
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem">
+        <div id="settings-sync-status" class="sync-badge sync-idle">⬡ Not connected</div>
+        <span id="settings-last-saved" style="font-size:10px;color:var(--text-muted)"></span>
+      </div>
+      <div id="settings-user-row" style="font-size:11px;color:var(--text-muted);margin-bottom:0.75rem;display:none">
+        Signed in as <span id="settings-user-email" style="color:var(--gold)"></span>
+      </div>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="firebaseSaveNow()">↑ Save Now</button>
+        <button class="btn btn-ghost btn-sm" onclick="firebaseLoadNow()">↓ Load from Cloud</button>
+        <button class="btn btn-ghost btn-sm" onclick="authSignOut();closeModal('modal-settings')">↪ Sign Out</button>
+        <button class="btn btn-danger btn-sm" onclick="disconnectFirebase()">Disconnect Firebase</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Firebase Configuration</div>
+      <p class="settings-hint" style="margin-bottom:0.75rem">
+        Paste your Firebase config values from
+        <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a>
+        → Project Settings → Your Apps → Web app config.
+      </p>
+      <div class="form-group" style="margin-bottom:0.6rem">
+        <label>API Key</label>
+        <input type="text" id="fb-apiKey" placeholder="AIzaSy...">
+      </div>
+      <div class="form-group" style="margin-bottom:0.6rem">
+        <label>Project ID</label>
+        <input type="text" id="fb-projectId" placeholder="my-life-tracker-12345">
+      </div>
+      <div class="form-group" style="margin-bottom:0.6rem">
+        <label>Auth Domain</label>
+        <input type="text" id="fb-authDomain" placeholder="my-app.firebaseapp.com">
+      </div>
+      <div class="form-group" style="margin-bottom:0.6rem">
+        <label>App ID</label>
+        <input type="text" id="fb-appId" placeholder="1:123456789:web:abc123...">
+      </div>
+      <p class="settings-hint">
+        Your credentials are stored only in this browser's localStorage and are never sent anywhere except directly to Firebase.
+      </p>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Auto-Save</div>
+      <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-size:12px">
+        <input type="checkbox" id="fb-autosave" style="width:auto;accent-color:var(--gold)">
+        <span>Auto-save whenever data changes</span>
+      </label>
+      <p class="settings-hint" style="margin-top:0.4rem">When enabled, every add/edit/delete syncs to Firebase automatically.</p>
+    </div>
+
+    <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:0.5rem">
+      <button class="btn btn-ghost" onclick="closeModal('modal-settings')">Close</button>
+      <button class="btn btn-primary" onclick="saveFirebaseConfig()">Connect & Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOOT TOAST -->
+<div class="loot-toast" id="loot-toast"></div>
+
+
+<script>
+// ═══════════════════ STATE ═══════════════════
+const state = {
+  budgets: [],
+  expenses: [],
+  savings: [],
+  debts: [],
+  assets: [],
+  bills: [],
+  income: [],
+  events: [],
+  workouts: [],
+  foods: [],
+  calYear: new Date().getFullYear(),
+  calMonth: new Date().getMonth()
+};
+
+// ═══════════════════ NAVIGATION ═══════════════════
+function showPage(id, tabEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (tabEl) tabEl.classList.add('active');
+  if (id === 'calendar') renderCalendar();
+}
+
+// ═══════════════════ MODALS ═══════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ═══════════════════ UTILS ═══════════════════
+function fmt(n) { return Number(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' GP'; }
+function today() { return new Date().toISOString().split('T')[0]; }
+function uid() { return Math.random().toString(36).slice(2); }
+
+// ═══════════════════ FINANCE ═══════════════════
+
+function addBudgetCategory() {
+  const name = document.getElementById('b-name').value.trim();
+  const limit = parseFloat(document.getElementById('b-limit').value) || 0;
+  const color = document.getElementById('b-color').value;
+  if (!name || !limit) return;
+  state.budgets.push({ id: uid(), name, limit, color });
+  clearFields(['b-name','b-limit']);
+  closeModal('modal-add-budget');
+  renderBudgets(); updateExpenseCategorySelect(); updateSummary();
+}
+
+function renderBudgets() {
+  const el = document.getElementById('budget-list');
+
+  // Tally bills that are paid this month (auto-logged as expenses) per budget category
+  const monthKey = billMonthKey({ day: 1 }); // current month string
+  const billSpendByBudgetCat = {};
+  state.bills.forEach(b => {
+    const isPaid = b.paidMonths.includes(monthKey);
+    if (isPaid) {
+      billSpendByBudgetCat[b.cat] = (billSpendByBudgetCat[b.cat] || 0) + b.amount;
+    }
+  });
+
+  // Bills not yet due this month (committed/upcoming)
+  const todayStr = today();
+  const upcomingBillsByBudgetCat = {};
+  state.bills.forEach(b => {
+    const dueDate = billDueDateThisMonth(b);
+    const isPaid = b.paidMonths.includes(monthKey);
+    if (!isPaid && todayStr < dueDate) {
+      upcomingBillsByBudgetCat[b.cat] = (upcomingBillsByBudgetCat[b.cat] || 0) + b.amount;
+    }
+  });
+
+  if (!state.budgets.length && !state.bills.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📊</div>No budget categories yet</div>';
+    return;
+  }
+
+  let html = '';
+
+  // Render user-defined budget categories
+  html += state.budgets.map(b => {
+    const expenseSpent = state.expenses.filter(e => e.cat === b.name && !e.fromBill).reduce((s,e) => s + e.amount, 0);
+    const billPaid = billSpendByBudgetCat[b.name] || 0;
+    const billUpcoming = upcomingBillsByBudgetCat[b.name] || 0;
+    const totalSpent = expenseSpent + billPaid;
+    const pct = Math.min(100, (totalSpent / b.limit) * 100);
+    const committedPct = Math.min(100, ((totalSpent + billUpcoming) / b.limit) * 100);
+    const overBudget = totalSpent > b.limit;
+
+    const billDetail = (billPaid > 0 || billUpcoming > 0) ? `
+      <div style="display:flex;gap:1rem;margin-top:0.3rem;font-size:10px">
+        ${billPaid > 0 ? `<span style="color:var(--red)">💳 ${fmt(billPaid)} bills paid</span>` : ''}
+        ${billUpcoming > 0 ? `<span style="color:var(--yellow)">⏰ ${fmt(billUpcoming)} upcoming</span>` : ''}
+      </div>` : '';
+
+    return `<div class="progress-wrap">
+      <div class="progress-label">
+        <span>${b.name}</span>
+        <span class="${overBudget ? 'red' : 'muted'}">${fmt(totalSpent)} / ${fmt(b.limit)}</span>
+      </div>
+      <div class="progress-bar" style="position:relative">
+        ${billUpcoming > 0 ? `<div class="progress-fill" style="width:${committedPct}%;background:var(--yellow-dim);position:absolute;top:0;left:0;height:100%;border-radius:99px"></div>` : ''}
+        <div class="progress-fill fill-${overBudget ? 'red' : b.color}" style="width:${pct}%;position:relative"></div>
+      </div>
+      ${billDetail}
+    </div>`;
+  }).join('');
+
+  // Bills summary section — any bills whose category doesn't match a budget category
+  const allBillCats = [...new Set(state.bills.map(b => b.cat))];
+  const unmatchedCats = allBillCats.filter(cat => !state.budgets.find(b => b.name === cat));
+  if (unmatchedCats.length) {
+    html += `<div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
+      <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.75rem">Bills (unbudgeted)</div>`;
+    html += unmatchedCats.map(cat => {
+      const catBills = state.bills.filter(b => b.cat === cat);
+      const paid = catBills.filter(b => b.paidMonths.includes(monthKey)).reduce((s,b) => s + b.amount, 0);
+      const upcoming = catBills.filter(b => !b.paidMonths.includes(monthKey) && todayStr < billDueDateThisMonth(b)).reduce((s,b) => s + b.amount, 0);
+      const total = catBills.reduce((s,b) => s + b.amount, 0);
+      return `<div class="progress-wrap">
+        <div class="progress-label">
+          <span class="muted">${cat}</span>
+          <span class="muted">${fmt(paid + upcoming)} / ${fmt(total)}</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill fill-red" style="width:${Math.min(100,(paid/total)*100)}%"></div>
+        </div>
+        <div style="font-size:10px;margin-top:0.3rem;display:flex;gap:1rem">
+          ${paid > 0 ? `<span style="color:var(--red)">💳 ${fmt(paid)} paid</span>` : ''}
+          ${upcoming > 0 ? `<span style="color:var(--yellow)">⏰ ${fmt(upcoming)} upcoming</span>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+    html += '</div>';
+  }
+
+  el.innerHTML = html || '<div class="empty"><div class="empty-icon">📊</div>No budget categories yet</div>';
+}
+
+function addExpense() {
+  const desc = document.getElementById('e-desc').value.trim();
+  const amount = parseFloat(document.getElementById('e-amount').value) || 0;
+  const cat = document.getElementById('e-cat').value;
+  const date = document.getElementById('e-date').value || today();
+  if (!desc || !amount) return;
+  state.expenses.push({ id: uid(), desc, amount, cat, date });
+  clearFields(['e-desc','e-amount','e-date']);
+  closeModal('modal-add-expense');
+  renderExpenses(); renderBudgets(); renderIncome(); updateSummary();
+}
+
+function renderExpenses() {
+  const body = document.getElementById('expense-body');
+  if (!state.expenses.length) { body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-dim)">No expenses logged</td></tr>'; return; }
+  const sorted = [...state.expenses].sort((a,b) => b.date.localeCompare(a.date));
+  body.innerHTML = sorted.map(e => `
+    <tr>
+      <td class="muted">${e.date}</td>
+      <td>${e.desc}</td>
+      <td>${e.cat ? `<span class="tag tag-purple">${e.cat}</span>` : '<span class="muted">—</span>'}</td>
+      <td class="red">${fmt(e.amount)}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="removeItem('expenses','${e.id}',renderExpenses,renderBudgets,updateSummary)">✕</button></td>
+    </tr>`).join('');
+}
+
+function updateExpenseCategorySelect() {
+  const sel = document.getElementById('e-cat');
+  sel.innerHTML = '<option value="">Uncategorized</option>' + state.budgets.map(b => `<option value="${b.name}">${b.name}</option>`).join('');
+}
+
+// ═══════════════════ BILLS ═══════════════════
+
+function addBill() {
+  const name = document.getElementById('bill-name').value.trim();
+  const amount = parseFloat(document.getElementById('bill-amount').value) || 0;
+  const day = parseInt(document.getElementById('bill-day').value) || 1;
+  const cat = document.getElementById('bill-cat').value;
+  const recur = document.getElementById('bill-recur').value;
+  if (!name || !amount) return;
+  const bill = { id: uid(), name, amount, day, cat, recur, paidMonths: [] };
+  state.bills.push(bill);
+  clearFields(['bill-name','bill-amount','bill-day']);
+  closeModal('modal-add-bill');
+  syncBillToCalendar(bill);
+  checkAndAutoLogBills();
+  renderBills();
+  updateSummary();
+}
+
+function billDueDateThisMonth(bill) {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(bill.day).padStart(2,'0')}`;
+}
+
+function billMonthKey(bill) {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+}
+
+function syncBillToCalendar(bill) {
+  // Remove old calendar events for this bill, re-add for next 12 months
+  state.events = state.events.filter(e => e.billId !== bill.id);
+  const now = new Date();
+  const monthsAhead = bill.recur === 'Monthly' ? 12 : bill.recur === 'Bi-monthly' ? 6 : bill.recur === 'Quarterly' ? 4 : 1;
+  for (let i = 0; i < monthsAhead; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, bill.day);
+    // For non-monthly, only add on correct intervals
+    if (bill.recur === 'Bi-monthly' && i % 2 !== 0) continue;
+    if (bill.recur === 'Quarterly' && i % 3 !== 0) continue;
+    const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(bill.day).padStart(2,'0')}`;
+    state.events.push({
+      id: uid(),
+      billId: bill.id,
+      title: `💳 ${bill.name} — ${fmt(bill.amount)}`,
+      date: ds,
+      time: '',
+      cat: 'red',
+      notes: `${bill.recur} bill · ${bill.cat}`
+    });
+  }
+  renderEvents();
+}
+
+function syncAllBillsToCalendar() {
+  state.bills.forEach(b => syncBillToCalendar(b));
+}
+
+function checkAndAutoLogBills() {
+  const todayStr = today();
+  state.bills.forEach(bill => {
+    const dueDate = billDueDateThisMonth(bill);
+    const monthKey = billMonthKey(bill);
+    // Auto-log if today is on or after the due date and not already logged this month
+    if (todayStr >= dueDate && !bill.paidMonths.includes(monthKey)) {
+      bill.paidMonths.push(monthKey);
+      state.expenses.push({
+        id: uid(),
+        desc: bill.name,
+        amount: bill.amount,
+        cat: bill.cat,
+        date: dueDate,
+        fromBill: true
+      });
+    }
+  });
+  renderExpenses();
+  renderBudgets();
+  renderBills();
+  updateSummary();
+}
+
+function markBillPaid(id) {
+  const bill = state.bills.find(b => b.id === id);
+  if (!bill) return;
+  const monthKey = billMonthKey(bill);
+  if (!bill.paidMonths.includes(monthKey)) {
+    bill.paidMonths.push(monthKey);
+    const dueDate = billDueDateThisMonth(bill);
+    state.expenses.push({ id: uid(), desc: bill.name, amount: bill.amount, cat: bill.cat, date: dueDate, fromBill: true });
+    renderExpenses(); renderBudgets(); updateSummary();
+  }
+  renderBills();
+}
+
+function renderBills() {
+  const body = document.getElementById('bills-body');
+  const todayStr = today();
+  const catColors = { Housing:'tag-blue', Utilities:'tag-yellow', Subscriptions:'tag-purple', Insurance:'tag-green', Transport:'tag-blue', 'Debt Payment':'tag-red', Other:'tag-purple' };
+
+  // Monthly-equivalent total
+  const monthlyTotal = state.bills.reduce((s,b) => {
+    const factor = b.recur === 'Monthly' ? 1 : b.recur === 'Bi-monthly' ? 0.5 : b.recur === 'Quarterly' ? 1/3 : 1/12;
+    return s + b.amount * factor;
+  }, 0);
+  document.getElementById('total-bills-display').textContent = fmt(monthlyTotal) + '/mo';
+
+  // Due badge
+  const overdueBills = state.bills.filter(b => {
+    const dueDate = billDueDateThisMonth(b);
+    return todayStr >= dueDate && !b.paidMonths.includes(billMonthKey(b));
+  });
+  const badge = document.getElementById('bills-due-badge');
+  if (overdueBills.length) {
+    badge.textContent = overdueBills.length + ' due';
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+
+  if (!state.bills.length) {
+    body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-dim)">No bills added — bills will auto-log as expenses on their due date</td></tr>';
+    return;
+  }
+
+  body.innerHTML = state.bills.map(b => {
+    const dueDate = billDueDateThisMonth(b);
+    const monthKey = billMonthKey(b);
+    const isPaid = b.paidMonths.includes(monthKey);
+    const isOverdue = !isPaid && todayStr >= dueDate;
+    const isDueSoon = !isPaid && !isOverdue && (new Date(dueDate) - new Date(todayStr)) / 86400000 <= 5;
+    let statusHtml;
+    if (isPaid) statusHtml = `<span class="tag tag-green">✓ Paid</span>`;
+    else if (isOverdue) statusHtml = `<span class="tag tag-red">⚡ Auto-logged</span>`;
+    else if (isDueSoon) statusHtml = `<span class="tag tag-yellow">⏰ Due soon</span>`;
+    else statusHtml = `<span class="tag" style="background:var(--surface3);color:var(--text-muted)">Upcoming</span>`;
+    return `<tr>
+      <td style="font-weight:600">${b.name}</td>
+      <td><span class="tag ${catColors[b.cat] || 'tag-purple'}">${b.cat}</span></td>
+      <td class="red">${fmt(b.amount)}</td>
+      <td class="muted">Day ${b.day}</td>
+      <td class="muted">${b.recur}</td>
+      <td>${statusHtml}</td>
+      <td style="display:flex;gap:0.4rem">
+        ${!isPaid ? `<button class="btn btn-ghost btn-sm" onclick="markBillPaid('${b.id}')">Mark Paid</button>` : ''}
+        <button class="btn btn-danger btn-sm" onclick="removeBill('${b.id}')">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function removeBill(id) {
+  state.events = state.events.filter(e => e.billId !== id);
+  state.bills = state.bills.filter(b => b.id !== id);
+  renderBills(); renderEvents(); renderCalendar(); updateSummary();
+}
+
+function addSaving() {
+  const name = document.getElementById('s-name').value.trim();
+  const target = parseFloat(document.getElementById('s-target').value) || 0;
+  const current = parseFloat(document.getElementById('s-current').value) || 0;
+  const date = document.getElementById('s-date').value;
+  if (!name || !target) return;
+  state.savings.push({ id: uid(), name, target, current, date });
+  clearFields(['s-name','s-target','s-current','s-date']);
+  closeModal('modal-add-saving');
+  renderSavings(); updateSummary();
+}
+
+function renderSavings() {
+  const el = document.getElementById('savings-list');
+  if (!state.savings.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🎯</div>No savings goals yet</div>'; return; }
+  el.innerHTML = state.savings.map(s => {
+    const pct = Math.min(100, (s.current / s.target) * 100);
+    return `<div style="margin-bottom:1rem">
+      <div class="progress-label">
+        <span style="font-weight:600">${s.name}</span>
+        <span class="green">${fmt(s.current)} / ${fmt(s.target)}</span>
+      </div>
+      ${s.date ? `<div class="muted" style="font-size:10px;margin-bottom:0.3rem">Target: ${s.date}</div>` : ''}
+      <div class="progress-bar"><div class="progress-fill fill-green" style="width:${pct}%"></div></div>
+      <div style="margin-top:0.5rem;display:flex;gap:0.5rem">
+        <input type="number" placeholder="Update amount" id="sup-${s.id}" style="flex:1" onkeydown="if(event.key==='Enter')updateSaving('${s.id}')">
+        <button class="btn btn-ghost btn-sm" onclick="updateSaving('${s.id}')">Update</button>
+        <button class="btn btn-danger btn-sm" onclick="removeItem('savings','${s.id}',renderSavings,updateSummary)">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateSaving(id) {
+  const input = document.getElementById('sup-' + id);
+  const val = parseFloat(input.value) || 0;
+  const s = state.savings.find(x => x.id === id);
+  if (s) { s.current = Math.min(s.target, s.current + val); input.value = ''; }
+  renderSavings(); updateSummary();
+}
+
+function addDebt() {
+  const name = document.getElementById('d-name').value.trim();
+  const total = parseFloat(document.getElementById('d-total').value) || 0;
+  const remaining = parseFloat(document.getElementById('d-remaining').value) || total;
+  const rate = parseFloat(document.getElementById('d-rate').value) || 0;
+  const type = document.getElementById('d-type').value;
+  if (!name || !total) return;
+  state.debts.push({ id: uid(), name, total, remaining, rate, type });
+  clearFields(['d-name','d-total','d-remaining','d-rate']);
+  closeModal('modal-add-debt');
+  renderDebts(); updateSummary();
+}
+
+function renderDebts() {
+  const el = document.getElementById('debt-list');
+  if (!state.debts.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">💳</div>No debts added</div>'; return; }
+  el.innerHTML = state.debts.map(d => {
+    const paidPct = Math.round(((d.total - d.remaining) / d.total) * 100);
+    return `<div style="margin-bottom:1.25rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem">
+        <div>
+          <div style="font-weight:600;font-size:13px">${d.name}</div>
+          <div class="muted" style="font-size:10px">${d.type} · ${d.rate}% APR</div>
+        </div>
+        <div style="text-align:right">
+          <div class="red" style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px">${fmt(d.remaining)}</div>
+          <div class="muted" style="font-size:10px">${paidPct}% paid off</div>
+        </div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill fill-green" style="width:${paidPct}%"></div></div>
+      <div style="margin-top:0.5rem;display:flex;gap:0.5rem">
+        <input type="number" placeholder="Payment amount" id="pay-${d.id}" style="flex:1" onkeydown="if(event.key==='Enter')makePayment('${d.id}')">
+        <button class="btn btn-ghost btn-sm" onclick="makePayment('${d.id}')">Pay</button>
+        <button class="btn btn-danger btn-sm" onclick="removeItem('debts','${d.id}',renderDebts,updateSummary)">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function makePayment(id) {
+  const input = document.getElementById('pay-' + id);
+  const amt = parseFloat(input.value) || 0;
+  const d = state.debts.find(x => x.id === id);
+  if (d) { d.remaining = Math.max(0, d.remaining - amt); input.value = ''; }
+  renderDebts(); updateSummary();
+}
+
+function addAsset() {
+  const name = document.getElementById('a-name').value.trim();
+  const type = document.getElementById('a-type').value;
+  const value = parseFloat(document.getElementById('a-value').value) || 0;
+  const notes = document.getElementById('a-notes').value.trim();
+  if (!name || !value) return;
+  state.assets.push({ id: uid(), name, type, value, notes });
+  clearFields(['a-name','a-value','a-notes']);
+  closeModal('modal-add-asset');
+  renderAssets(); updateSummary();
+}
+
+function renderAssets() {
+  const body = document.getElementById('asset-body');
+  const total = state.assets.reduce((s, a) => s + a.value, 0);
+  document.getElementById('total-assets-display').textContent = fmt(total);
+  const typeColors = {
+    'Cash / Bank': 'green', 'Investment': 'blue', 'Real Estate': 'yellow',
+    'Vehicle': 'purple', 'Retirement (401k/IRA)': 'accent', 'Crypto': 'yellow', 'Other': 'purple'
+  };
+  const tagClass = { 'green':'tag-green','blue':'tag-blue','yellow':'tag-yellow','purple':'tag-purple','accent':'tag-purple' };
+  if (!state.assets.length) { body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-dim)">No assets added</td></tr>'; return; }
+  body.innerHTML = state.assets.map(a => {
+    const col = typeColors[a.type] || 'purple';
+    return `<tr>
+      <td style="font-weight:600">${a.name}</td>
+      <td><span class="tag ${tagClass[col] || 'tag-purple'}">${a.type}</span></td>
+      <td class="green">${fmt(a.value)}</td>
+      <td class="muted">${a.notes || '—'}</td>
+      <td>
+        <div style="display:flex;gap:0.4rem;align-items:center">
+          <input type="number" placeholder="New value" id="aupd-${a.id}" style="width:110px;padding:0.3rem 0.5rem;font-size:11px" onkeydown="if(event.key==='Enter')updateAsset('${a.id}')">
+          <button class="btn btn-ghost btn-sm" onclick="updateAsset('${a.id}')">Update</button>
+          <button class="btn btn-danger btn-sm" onclick="removeItem('assets','${a.id}',renderAssets,updateSummary)">✕</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function updateAsset(id) {
+  const input = document.getElementById('aupd-' + id);
+  const val = parseFloat(input.value);
+  if (!isNaN(val) && val >= 0) {
+    const a = state.assets.find(x => x.id === id);
+    if (a) { a.value = val; input.value = ''; }
+  }
+  renderAssets(); updateSummary();
+}
+
+function addIncome() {
+  const name = document.getElementById('i-name').value.trim();
+  const amount = parseFloat(document.getElementById('i-amount').value) || 0;
+  const date = document.getElementById('i-date').value || today();
+  const type = document.getElementById('i-type').value;
+  const notes = document.getElementById('i-notes').value.trim();
+  if (!name || !amount) return;
+  state.income.push({ id: uid(), name, amount, date, type, notes });
+  clearFields(['i-name','i-amount','i-date','i-notes']);
+  closeModal('modal-add-income');
+  renderIncome(); updateSummary();
+}
+
+function renderIncome() {
+  const body = document.getElementById('income-body');
+  const typeColors = { Salary:'tag-green', Freelance:'tag-blue', Investment:'tag-purple', 'Side Hustle':'tag-yellow', Bonus:'tag-yellow', Gift:'tag-blue', Other:'tag-purple' };
+
+  if (!state.income.length) {
+    body.innerHTML = '<tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--text-dim)">No income logged yet</td></tr>';
+  } else {
+    const sorted = [...state.income].sort((a,b) => b.date.localeCompare(a.date));
+    body.innerHTML = sorted.map(i => `
+      <tr>
+        <td class="muted">${i.date}</td>
+        <td style="font-weight:600">${i.name}</td>
+        <td><span class="tag ${typeColors[i.type] || 'tag-green'}">${i.type}</span></td>
+        <td class="green">${fmt(i.amount)}</td>
+        <td class="muted">${i.notes || '—'}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="removeItem('income','${i.id}',renderIncome,updateSummary)">✕</button></td>
+      </tr>`).join('');
+  }
+
+  // Summary stats
+  const now = new Date();
+  const monthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const thisMonth = state.income.filter(i => i.date.startsWith(monthStr)).reduce((s,i) => s + i.amount, 0);
+  const allTime = state.income.reduce((s,i) => s + i.amount, 0);
+  document.getElementById('income-this-month').textContent = fmt(thisMonth);
+  document.getElementById('income-all-time').textContent = fmt(allTime);
+
+  // Income vs expenses this month
+  const monthExpenses = state.expenses.filter(e => e.date.startsWith(monthStr)).reduce((s,e) => s + e.amount, 0);
+  const delta = thisMonth - monthExpenses;
+  const vsEl = document.getElementById('income-vs-expenses');
+  if (thisMonth > 0 || monthExpenses > 0) {
+    vsEl.innerHTML = delta >= 0
+      ? `<span class="green">▲ ${fmt(delta)} surplus this month</span>`
+      : `<span class="red">▼ ${fmt(Math.abs(delta))} deficit this month</span>`;
+  } else {
+    vsEl.textContent = '—';
+  }
+}
+
+function updateSummary() {
+  // Net Worth
+  const totalSavings = state.savings.reduce((s,x) => s + x.current, 0);
+  const totalAssets = state.assets.reduce((s,x) => s + x.value, 0);
+  const totalDebt = state.debts.reduce((s,x) => s + x.remaining, 0);
+  const netWorth = totalSavings + totalAssets - totalDebt;
+  document.getElementById('net-worth').textContent = fmt(netWorth);
+  document.getElementById('net-worth').className = 'stat-value ' + (netWorth >= 0 ? 'green' : 'red');
+  document.getElementById('net-worth-change').textContent = netWorth >= 0 ? '▲ Positive net worth' : '▼ Negative net worth';
+
+  // Budget / This Month
+  const now = new Date();
+  const monthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const totalBudget = state.budgets.reduce((s,x) => s + x.limit, 0);
+  const totalSpent = state.expenses.reduce((s,x) => s + x.amount, 0);
+  const thisMonthIncome = state.income.filter(i => i.date.startsWith(monthStr)).reduce((s,i) => s + i.amount, 0);
+  const thisMonthSpent = state.expenses.filter(e => e.date.startsWith(monthStr)).reduce((s,e) => s + e.amount, 0);
+  const totalBillsMonthly = state.bills.reduce((s,b) => {
+    const factor = b.recur === 'Monthly' ? 1 : b.recur === 'Bi-monthly' ? 0.5 : b.recur === 'Quarterly' ? 1/3 : 1/12;
+    return s + b.amount * factor;
+  }, 0);
+
+  // Prefer income-based remaining if income is logged, else fall back to budget-based
+  let remaining, remainingLabel;
+  if (thisMonthIncome > 0) {
+    remaining = thisMonthIncome - thisMonthSpent;
+    remainingLabel = 'Remaining (income − spent)';
+  } else if (totalBudget > 0) {
+    remaining = totalBudget - thisMonthSpent;
+    remainingLabel = 'Remaining (budget − spent)';
+  } else {
+    remaining = 0;
+    remainingLabel = 'Log income or set a budget';
+  }
+
+  document.getElementById('budget-remaining').textContent = fmt(Math.abs(remaining));
+  document.getElementById('budget-remaining').className = 'stat-value ' + (remaining >= 0 ? 'green' : 'red');
+  document.getElementById('budget-remaining-label').textContent = remainingLabel;
+  document.getElementById('summary-income-label').textContent = `Income: ${fmt(thisMonthIncome)}`;
+  document.getElementById('summary-expense-label').textContent = `Spent: ${fmt(thisMonthSpent)}`;
+
+  const base = thisMonthIncome > 0 ? thisMonthIncome : totalBudget;
+  const effectiveSpent = thisMonthSpent;
+  const pct = base > 0 ? Math.min(100, (effectiveSpent / base) * 100) : (totalBillsMonthly > 0 ? 50 : 0);
+  document.getElementById('budget-bar').style.width = pct + '%';
+  document.getElementById('budget-bar').className = 'progress-fill ' + (pct > 90 ? 'fill-red' : pct > 70 ? 'fill-yellow' : 'fill-accent');
+
+  // Debt
+  document.getElementById('total-debt').textContent = fmt(totalDebt);
+  const totalOriginal = state.debts.reduce((s,x) => s + x.total, 0);
+  const totalPaid = totalOriginal - totalDebt;
+  document.getElementById('debt-paid').textContent = totalPaid > 0 ? `${fmt(totalPaid)} paid off total` : 'Track payments below';
+}
+
+// ═══════════════════ CALENDAR ═══════════════════
+
+function addEvent() {
+  const title = document.getElementById('ev-title').value.trim();
+  const date = document.getElementById('ev-date').value || today();
+  const time = document.getElementById('ev-time').value;
+  const cat = document.getElementById('ev-cat').value;
+  const notes = document.getElementById('ev-notes').value;
+  if (!title) return;
+  state.events.push({ id: uid(), title, date, time, cat, notes });
+  clearFields(['ev-title','ev-date','ev-time','ev-notes']);
+  closeModal('modal-add-event');
+  renderEvents(); renderCalendar();
+}
+
+function renderEvents(showAll) {
+  const el = document.getElementById('event-list');
+  if (!state.events.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📅</div>No events yet</div>'; return; }
+  const todayStr = today();
+  const sorted = [...state.events]
+    .sort((a,b) => a.date.localeCompare(b.date))
+    .filter(ev => ev.date >= todayStr);
+  const past = [...state.events].filter(ev => ev.date < todayStr).sort((a,b) => b.date.localeCompare(a.date));
+  const all = [...sorted, ...past];
+  const colors = { purple: 'var(--accent)', green: 'var(--green)', blue: 'var(--blue)', yellow: 'var(--yellow)', red: 'var(--red)' };
+  const limit = showAll ? all.length : 3;
+  const visible = all.slice(0, limit);
+  const remaining = all.length - limit;
+
+  const evHtml = visible.map(ev => `
+    <div class="event-item">
+      <div class="event-dot" style="background:${colors[ev.cat] || colors.purple}"></div>
+      <div class="event-info">
+        <div class="event-title">${ev.title}</div>
+        <div class="event-meta">${ev.date}${ev.time ? ' · ' + ev.time : ''}</div>
+        ${ev.notes ? `<div class="event-meta" style="margin-top:2px">${ev.notes}</div>` : ''}
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="removeItem('events','${ev.id}',renderEvents,renderCalendar)">✕</button>
+    </div>`).join('');
+
+  const moreBtn = !showAll && remaining > 0
+    ? `<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:0.75rem;justify-content:center" onclick="renderEvents(true)">Show ${remaining} more event${remaining > 1 ? 's' : ''} ↓</button>`
+    : showAll && all.length > 3
+    ? `<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:0.75rem;justify-content:center" onclick="renderEvents(false)">Show less ↑</button>`
+    : '';
+
+  el.innerHTML = evHtml + moreBtn;
+}
+
+function calNav(dir) {
+  state.calMonth += dir;
+  if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
+  if (state.calMonth < 0) { state.calMonth = 11; state.calYear--; }
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-title').textContent = months[state.calMonth] + ' ' + state.calYear;
+  document.getElementById('cal-header').innerHTML = days.map(d => `<div class="cal-header-cell">${d}</div>`).join('');
+
+  const firstDay = new Date(state.calYear, state.calMonth, 1).getDay();
+  const daysInMonth = new Date(state.calYear, state.calMonth + 1, 0).getDate();
+  const daysInPrev = new Date(state.calYear, state.calMonth, 0).getDate();
+  const todayStr = today();
+
+  // Separate bill events from regular events for different dot colors
+  const billEventDates = new Set(state.events.filter(e => e.billId).map(e => e.date));
+  const regularEventDates = new Set(state.events.filter(e => !e.billId).map(e => e.date));
+
+  let cells = '';
+  for (let i = 0; i < firstDay; i++) {
+    const d = daysInPrev - firstDay + 1 + i;
+    cells += `<div class="cal-cell other-month">${d}</div>`;
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = `${state.calYear}-${String(state.calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = ds === todayStr;
+    const hasBill = billEventDates.has(ds);
+    const hasEv = regularEventDates.has(ds);
+    const dots = (hasBill || hasEv) ? `<div style="display:flex;gap:2px;margin-top:2px">${hasBill ? '<div style="width:4px;height:4px;border-radius:50%;background:var(--red)"></div>' : ''}${hasEv ? '<div style="width:4px;height:4px;border-radius:50%;background:var(--accent)"></div>' : ''}</div>` : '';
+    cells += `<div class="cal-cell ${isToday ? 'today' : ''}" style="justify-content:center">${d}${dots}</div>`;
+  }
+  const totalCells = firstDay + daysInMonth;
+  const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+  for (let d = 1; d <= remaining; d++) {
+    cells += `<div class="cal-cell other-month">${d}</div>`;
+  }
+  document.getElementById('cal-body').innerHTML = cells;
+}
+
+// ═══════════════════ HEALTH ═══════════════════
+
+function addWorkout() {
+  const name = document.getElementById('w-name').value.trim();
+  const type = document.getElementById('w-type').value;
+  const duration = parseInt(document.getElementById('w-duration').value) || 0;
+  const volume = parseFloat(document.getElementById('w-volume').value) || 0;
+  const date = document.getElementById('w-date').value || today();
+  const notes = document.getElementById('w-notes').value;
+  if (!name) return;
+  state.workouts.push({ id: uid(), name, type, duration, volume, date, notes });
+  clearFields(['w-name','w-duration','w-volume','w-date','w-notes']);
+  closeModal('modal-add-workout');
+  renderWorkouts(); updateHealthSummary();
+}
+
+function renderWorkouts() {
+  const el = document.getElementById('workout-list');
+  if (!state.workouts.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🏋️</div>No workouts logged</div>'; return; }
+  const sorted = [...state.workouts].sort((a,b) => b.date.localeCompare(a.date));
+  el.innerHTML = sorted.map(w => `
+    <div class="workout-item">
+      <div class="workout-icon" style="background:var(--surface3);font-size:18px">${w.type}</div>
+      <div style="flex:1;margin-left:0.75rem">
+        <div style="font-weight:600;font-size:13px">${w.name}</div>
+        <div class="muted" style="font-size:10px">${w.date} · ${w.duration} min${w.volume ? ' · ' + w.volume + 'kg' : ''}</div>
+        ${w.notes ? `<div class="muted" style="font-size:10px;margin-top:2px">${w.notes}</div>` : ''}
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="removeItem('workouts','${w.id}',renderWorkouts,updateHealthSummary)">✕</button>
+    </div>`).join('');
+}
+
+function updateHealthSummary() {
+  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+  const thisWeek = state.workouts.filter(w => new Date(w.date) >= weekAgo);
+  document.getElementById('workouts-this-week').textContent = thisWeek.length;
+  document.getElementById('total-volume').textContent = thisWeek.reduce((s,w) => s + w.volume, 0).toFixed(0);
+
+  // Simple streak: count consecutive days ending today
+  const workoutDates = new Set(state.workouts.map(w => w.date));
+  let streak = 0, d = new Date();
+  while (workoutDates.has(d.toISOString().split('T')[0])) {
+    streak++; d.setDate(d.getDate() - 1);
+  }
+  document.getElementById('streak-count').textContent = streak;
+}
+
+function updateMetrics() {
+  const weight = parseFloat(document.getElementById('metric-weight').value);
+  const height = parseFloat(document.getElementById('metric-height').value);
+  const bf = parseFloat(document.getElementById('metric-bf').value);
+  let html = '';
+  if (weight && height) {
+    const bmi = (weight / ((height/100) ** 2)).toFixed(1);
+    const cat = bmi < 18.5 ? 'Underweight' : bmi < 25 ? 'Normal' : bmi < 30 ? 'Overweight' : 'Obese';
+    const col = bmi < 18.5 ? 'blue' : bmi < 25 ? 'green' : bmi < 30 ? 'yellow' : 'red';
+    html += `<div style="margin-bottom:0.5rem">BMI: <span class="${col}" style="font-weight:600">${bmi}</span> <span class="muted">(${cat})</span></div>`;
+  }
+  if (weight && bf) {
+    const lbm = (weight * (1 - bf/100)).toFixed(1);
+    const fatMass = (weight * bf / 100).toFixed(1);
+    html += `<div style="margin-bottom:0.25rem">Lean Body Mass: <span class="green" style="font-weight:600">${lbm} kg</span></div>`;
+    html += `<div>Fat Mass: <span class="yellow" style="font-weight:600">${fatMass} kg</span></div>`;
+  }
+  if (!html) html = 'Enter metrics to see calculations.';
+  document.getElementById('metric-results').innerHTML = html;
+}
+
+// ═══════════════════ MEALS ═══════════════════
+
+function addFood() {
+  const name = document.getElementById('f-name').value.trim();
+  const meal = document.getElementById('f-meal').value;
+  const cal = parseInt(document.getElementById('f-cal').value) || 0;
+  const protein = parseInt(document.getElementById('f-protein').value) || 0;
+  const carbs = parseInt(document.getElementById('f-carbs').value) || 0;
+  const fats = parseInt(document.getElementById('f-fats').value) || 0;
+  if (!name) return;
+  state.foods.push({ id: uid(), name, meal, cal, protein, carbs, fats });
+  clearFields(['f-name','f-cal','f-protein','f-carbs','f-fats']);
+  closeModal('modal-add-meal');
+  renderFoods(); renderMealSlots(); updateNutritionSummary();
+}
+
+function renderFoods() {
+  const body = document.getElementById('food-log-body');
+  document.getElementById('food-count-badge').textContent = state.foods.length + ' items';
+  if (!state.foods.length) { body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-dim)">No foods logged</td></tr>'; return; }
+  body.innerHTML = state.foods.map(f => `
+    <tr>
+      <td style="font-weight:600">${f.name}</td>
+      <td><span class="tag tag-purple">${f.meal}</span></td>
+      <td class="yellow">${f.cal}</td>
+      <td class="muted" style="font-size:11px">${f.protein}/${f.carbs}/${f.fats}g</td>
+      <td><button class="btn btn-danger btn-sm" onclick="removeItem('foods','${f.id}',renderFoods,renderMealSlots,updateNutritionSummary)">✕</button></td>
+    </tr>`).join('');
+}
+
+function renderMealSlots() {
+  const meals = ['Breakfast','Lunch','Dinner','Snack'];
+  const colors = { Breakfast: 'yellow', Lunch: 'green', Dinner: 'blue', Snack: 'accent' };
+  document.getElementById('meal-slots').innerHTML = meals.map(m => {
+    const items = state.foods.filter(f => f.meal === m);
+    const mCal = items.reduce((s,x) => s + x.cal, 0);
+    return `<div class="meal-slot">
+      <div class="meal-slot-header">
+        <span>${m}</span>
+        <span class="${colors[m]}">${mCal} kcal</span>
+      </div>
+      ${items.length ? items.map(f => `<div class="meal-item-line">
+        <span>${f.name}</span>
+        <span class="muted">${f.cal} kcal · ${f.protein}p</span>
+      </div>`).join('') : '<div class="muted" style="font-size:11px">Nothing logged</div>'}
+    </div>`;
+  }).join('');
+}
+
+function updateNutritionSummary() {
+  const total = state.foods.reduce((s,f) => ({ cal: s.cal+f.cal, p: s.p+f.protein, c: s.c+f.carbs, f: s.f+f.fats }), {cal:0,p:0,c:0,f:0});
+  const goal = parseInt(document.getElementById('cal-goal-input').value) || 2000;
+  document.getElementById('cal-today').textContent = total.cal;
+  document.getElementById('cal-bar').style.width = Math.min(100, (total.cal / goal) * 100) + '%';
+  document.getElementById('macro-p').textContent = total.p + 'g';
+  document.getElementById('macro-c').textContent = total.c + 'g';
+  document.getElementById('macro-f').textContent = total.f + 'g';
+}
+
+function updateCalGoal() {
+  document.getElementById('cal-goal').textContent = document.getElementById('cal-goal-input').value || 2000;
+  updateNutritionSummary();
+}
+
+// ═══════════════════ HELPERS ═══════════════════
+
+function removeItem(arr, id, ...callbacks) {
+  state[arr] = state[arr].filter(x => x.id !== id);
+  callbacks.forEach(fn => fn && fn());
+}
+
+function clearFields(ids) {
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+}
+
+// ═══════════════════ RPG EXTRAS ═══════════════════
+
+// Particles
+(function() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 25; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.setProperty('--dur', (8 + Math.random() * 12) + 's');
+    p.style.setProperty('--delay', (Math.random() * 10) + 's');
+    p.style.setProperty('--drift', (Math.random() * 60 - 30) + 'px');
+    p.style.left = (Math.random() * 100) + '%';
+    p.style.bottom = '0';
+    container.appendChild(p);
+  }
+})();
+
+// Loot Toast
+function showLoot(msg) {
+  const t = document.getElementById('loot-toast');
+  t.innerHTML = '<span class="toast-icon">✨</span>' + msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// Level & HUD system
+function updateHUD() {
+  const totalIncome = state.income.reduce((s,i) => s + i.amount, 0);
+  const totalWorkouts = state.workouts.length;
+  const totalSavings = state.savings.reduce((s,x) => s + x.current, 0);
+  const totalFoods = state.foods.length;
+
+  // XP = actions taken across all categories
+  const xpPoints = state.expenses.length + state.income.length + totalWorkouts + state.foods.length + state.events.length + state.bills.length;
+  const xpPerLevel = 20;
+  const level = Math.floor(xpPoints / xpPerLevel) + 1;
+  const xpProgress = ((xpPoints % xpPerLevel) / xpPerLevel) * 100;
+
+  // HP = health score based on workout streak + days active
+  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+  const weekWorkouts = state.workouts.filter(w => new Date(w.date) >= weekAgo).length;
+  const hp = Math.min(100, 40 + weekWorkouts * 10);
+
+  // MP = financial health — net worth positive, bills paid, etc.
+  const totalDebt = state.debts.reduce((s,x) => s + x.remaining, 0);
+  const totalAssets = state.assets.reduce((s,x) => s + x.value, 0);
+  const netWorthPositive = (totalSavings + totalAssets - totalDebt) > 0;
+  const paidBillsRatio = state.bills.length > 0
+    ? state.bills.filter(b => b.paidMonths.includes(billMonthKey(b))).length / state.bills.length
+    : 0.5;
+  const mp = Math.min(100, Math.round(30 + (netWorthPositive ? 30 : 0) + paidBillsRatio * 40));
+
+  document.getElementById('hud-hp').style.width = hp + '%';
+  document.getElementById('hud-hp-val').textContent = hp;
+  document.getElementById('hud-mp').style.width = mp + '%';
+  document.getElementById('hud-mp-val').textContent = mp;
+  document.getElementById('hud-xp').style.width = xpProgress + '%';
+  document.getElementById('hud-xp-val').textContent = Math.round(xpProgress) + '%';
+  document.getElementById('player-level').textContent = 'LVL ' + level;
+
+  state._level = state._level || 1;
+  if (level > state._level) {
+    state._level = level;
+    showLoot('⬆ LEVEL UP! You are now Level ' + level);
+  }
+  state._level = level;
+}
+
+// Patch all mutating functions to also call updateHUD
+const _origUpdateSummary = updateSummary;
+updateSummary = function() { _origUpdateSummary(); updateHUD(); };
+
+// Patch addExpense to show loot toast
+const _origAddExpense = addExpense;
+addExpense = function() {
+  const prevLen = state.expenses.length;
+  _origAddExpense();
+  if (state.expenses.length > prevLen) showLoot('💰 Gold spent recorded');
+};
+
+const _origAddIncome = addIncome;
+addIncome = function() {
+  const prevLen = state.income.length;
+  _origAddIncome();
+  if (state.income.length > prevLen) {
+    const last = state.income[state.income.length-1];
+    showLoot('🪙 +' + last.amount.toLocaleString('en-US', {minimumFractionDigits:2}) + ' GP earned!');
+    updateHUD();
+  }
+};
+
+const _origAddWorkout = addWorkout;
+addWorkout = function() {
+  const prevLen = state.workouts.length;
+  _origAddWorkout();
+  if (state.workouts.length > prevLen) { showLoot('⚔ Training session logged! +XP'); updateHUD(); }
+};
+
+const _origAddSaving = addSaving;
+addSaving = function() {
+  const prevLen = state.savings.length;
+  _origAddSaving();
+  if (state.savings.length > prevLen) { showLoot('🏆 Treasure vault established!'); updateHUD(); }
+};
+
+const _origAddEvent = addEvent;
+addEvent = function() {
+  const prevLen = state.events.length;
+  _origAddEvent();
+  if (state.events.length > prevLen) { showLoot('📜 Quest accepted!'); updateHUD(); }
+};
+
+
+// ═══════════════════ FIREBASE PERSISTENCE ═══════════════════
+
+const FB = {
+  configured: false,
+  autosave: true,
+  saveTimer: null,
+  lastSaved: null,
+  docPath: null,
+  user: null,
+};
+
+const LS_CONFIG_KEY   = 'chronicle_fb_config';
+const LS_AUTOSAVE_KEY = 'chronicle_fb_autosave';
+
+// ── UI helpers ───────────────────────────────────────────
+function setSyncStatus(status, text) {
+  ['sync-status','settings-sync-status'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'sync-badge sync-' + status;
+    el.textContent = text;
+  });
+}
+function showAuthScreen() {
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app-wrapper').style.display = 'none';
+}
+function showAppScreen() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-wrapper').style.display = 'block';
+}
+function setAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+}
+function setAuthLoading(loading) {
+  const btn = document.getElementById('auth-submit-btn');
+  btn.textContent = loading ? '…' : 'Sign In';
+  btn.disabled = loading;
+}
+function updateUserDisplay() {
+  const el = document.getElementById('user-display');
+  if (el && FB.user) el.textContent = FB.user.email;
+  const row = document.getElementById('settings-user-row');
+  const emailEl = document.getElementById('settings-user-email');
+  if (row && emailEl && FB.user) {
+    emailEl.textContent = FB.user.email;
+    row.style.display = 'block';
+  }
+}
+
+const FB_SCRIPTS = [
+  'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
+  'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js',
+  'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js',
+];
+
+function loadFirebaseScripts() {
+  // Load scripts sequentially, one at a time
+  return FB_SCRIPTS.reduce((chain, src) => {
+    return chain.then(() => new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = () => { console.log('Loaded:', src); resolve(); };
+      s.onerror = () => reject(new Error('Failed to load: ' + src));
+      document.head.appendChild(s);
+    }));
+  }, Promise.resolve());
+}
+
+// ── Init Firebase app ────────────────────────────────────
+async function initFirebase(config) {
+  await loadFirebaseScripts();
+  // Delete existing app if re-initialising
+  try { await window.firebase.app().delete(); } catch(e) {}
+  window.firebase.initializeApp(config);
+
+  // Verify auth and firestore are available
+  if (!window.firebase.auth) throw new Error('Firebase Auth failed to load. Check your internet connection.');
+  if (!window.firebase.firestore) throw new Error('Firebase Firestore failed to load.');
+
+  FB.auth = window.firebase.auth();
+  FB.db   = window.firebase.firestore();
+  FB.configured = true;
+
+  // Listen for auth state changes
+  FB.auth.onAuthStateChanged(async user => {
+    if (user) {
+      FB.user = user;
+      FB.docPath = FB.db.collection('users').doc(user.uid).collection('tracker').doc('main');
+      updateUserDisplay();
+      showAppScreen();
+      setSyncStatus('loading', '… Loading');
+      await firebaseLoadNow();
+      showLoot('👤 Signed in as ' + user.email.split('@')[0]);
+    } else {
+      FB.user = null;
+      FB.docPath = null;
+      showAuthScreen();
+      setSyncStatus('idle', '⬡ Not signed in');
+    }
+  });
+}
+
+// ── Auth actions ─────────────────────────────────────────
+async function authSignIn() {
+  const email    = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  if (!email || !password) { setAuthError('Please fill in all fields.'); return; }
+  setAuthError(''); setAuthLoading(true);
+  try {
+    await FB.auth.signInWithEmailAndPassword(email, password);
+  } catch(e) {
+    const msgs = {
+      'auth/invalid-email':      'Invalid email address.',
+      'auth/user-not-found':     'No account found with this email.',
+      'auth/wrong-password':     'Incorrect password.',
+      'auth/invalid-credential': 'Incorrect email or password.',
+      'auth/user-disabled':      'This account has been disabled.',
+      'auth/too-many-requests':  'Too many attempts. Please try again later.',
+    };
+    setAuthError(msgs[e.code] || e.message);
+    setAuthLoading(false);
+  }
+}
+
+async function authSignOut() {
+  if (!FB.auth) return;
+  await FB.auth.signOut();
+  // Reset state
+  const keys = ['budgets','expenses','savings','debts','assets','bills','income','events','workouts','foods'];
+  keys.forEach(k => state[k] = []);
+  refreshAllViews();
+  showLoot('👋 Signed out');
+}
+
+async function authResetPassword() {
+  const email = document.getElementById('auth-email').value.trim();
+  if (!email) { setAuthError('Enter your email address first.'); return; }
+  try {
+    await FB.auth.sendPasswordResetEmail(email);
+    setAuthError('');
+    alert('Password reset email sent to ' + email);
+  } catch(e) {
+    setAuthError('Could not send reset email: ' + e.message);
+  }
+}
+
+// ── Settings modal ───────────────────────────────────────
+async function saveFirebaseConfig() {
+  const apiKey     = document.getElementById('fb-apiKey').value.trim();
+  const projectId  = document.getElementById('fb-projectId').value.trim();
+  const authDomain = document.getElementById('fb-authDomain').value.trim();
+  const appId      = document.getElementById('fb-appId').value.trim();
+  const autosave   = document.getElementById('fb-autosave').checked;
+  if (!apiKey || !projectId) { setSyncStatus('error', '✕ Missing fields'); return; }
+  const config = { apiKey, projectId, authDomain: authDomain || projectId + '.firebaseapp.com', appId };
+  localStorage.setItem(LS_CONFIG_KEY, JSON.stringify(config));
+  localStorage.setItem(LS_AUTOSAVE_KEY, autosave ? '1' : '0');
+  FB.autosave = autosave;
+  setSyncStatus('loading', '… Connecting');
+  try {
+    await initFirebase(config);
+    setSyncStatus('saved', '✓ Connected');
+    showLoot('🔥 Firebase connected!');
+    closeModal('modal-settings');
+    // Auth screen will show automatically via onAuthStateChanged
+  } catch(e) {
+    setSyncStatus('error', '✕ Failed');
+    console.error(e);
+    alert('Connection failed. Check your config values.\n\n' + e.message);
+  }
+}
+
+function disconnectFirebase() {
+  if (confirm('Disconnect Firebase? You will be signed out.')) {
+    if (FB.auth) FB.auth.signOut();
+    localStorage.removeItem(LS_CONFIG_KEY);
+    localStorage.removeItem(LS_AUTOSAVE_KEY);
+    FB.configured = false;
+    setSyncStatus('idle', '⬡ Not connected');
+    showLoot('🔌 Disconnected');
+  }
+}
+
+function openSettingsModal() {
+  const saved = localStorage.getItem(LS_CONFIG_KEY);
+  const cfg = saved ? JSON.parse(saved) : FIREBASE_CONFIG;
+  try {
+    document.getElementById('fb-apiKey').value     = cfg.apiKey     || '';
+    document.getElementById('fb-projectId').value  = cfg.projectId  || '';
+    document.getElementById('fb-authDomain').value = cfg.authDomain || '';
+    document.getElementById('fb-appId').value      = cfg.appId      || '';
+  } catch(e) {}
+  document.getElementById('fb-autosave').checked = localStorage.getItem(LS_AUTOSAVE_KEY) !== '0';
+  const el = document.getElementById('settings-last-saved');
+  if (el) el.textContent = FB.lastSaved ? 'Last saved: ' + FB.lastSaved.toLocaleTimeString() : '';
+  if (FB.user) updateUserDisplay();
+  openModal('modal-settings');
+}
+
+const _origOpenModal = openModal;
+openModal = function(id) {
+  if (id === 'modal-settings') { openSettingsModal(); return; }
+  _origOpenModal(id);
+};
+
+// ── Data sync ────────────────────────────────────────────
+function serializeState() {
+  const keys = ['budgets','expenses','savings','debts','assets','bills','income','events','workouts','foods'];
+  const out = {}; keys.forEach(k => out[k] = state[k]); return out;
+}
+
+function deserializeState(data) {
+  const keys = ['budgets','expenses','savings','debts','assets','bills','income','events','workouts','foods'];
+  keys.forEach(k => { if (data[k]) state[k] = data[k]; });
+}
+
+async function firebaseSaveNow() {
+  if (!FB.configured || !FB.docPath) { setSyncStatus('error', '✕ Not signed in'); return; }
+  setSyncStatus('saving', '… Saving');
+  try {
+    await FB.docPath.set({ data: serializeState(), updatedAt: new Date().toISOString() });
+    FB.lastSaved = new Date();
+    setSyncStatus('saved', '✓ Saved');
+    const el = document.getElementById('settings-last-saved');
+    if (el) el.textContent = 'Last saved: ' + FB.lastSaved.toLocaleTimeString();
+  } catch(e) {
+    setSyncStatus('error', '✕ Save failed');
+    console.error(e);
+  }
+}
+
+async function firebaseLoadNow() {
+  if (!FB.configured || !FB.docPath) { setSyncStatus('error', '✕ Not signed in'); return; }
+  setSyncStatus('loading', '… Loading');
+  try {
+    const doc = await FB.docPath.get();
+    if (doc.exists && doc.data().data) {
+      deserializeState(doc.data().data);
+      refreshAllViews();
+      setSyncStatus('saved', '✓ Synced');
+    } else {
+      setSyncStatus('saved', '✓ Ready');
+    }
+  } catch(e) {
+    setSyncStatus('error', '✕ Load failed');
+    console.error(e);
+  }
+}
+
+function firebaseQueueSave() {
+  if (!FB.configured || !FB.autosave || !FB.docPath) return;
+  clearTimeout(FB.saveTimer);
+  setSyncStatus('saving', '… Saving');
+  FB.saveTimer = setTimeout(firebaseSaveNow, 1500);
+}
+
+function refreshAllViews() {
+  renderBudgets(); renderExpenses(); updateExpenseCategorySelect();
+  renderSavings(); renderDebts(); renderAssets(); renderIncome();
+  renderBills(); renderEvents(); renderCalendar();
+  renderWorkouts(); updateHealthSummary();
+  renderFoods(); renderMealSlots(); updateNutritionSummary();
+  updateSummary(); updateHUD();
+  checkAndAutoLogBills();
+}
+
+// Patch mutating functions to auto-save
+function patchForSync(fnName) {
+  const orig = window[fnName];
+  if (typeof orig !== 'function') return;
+  window[fnName] = function(...args) { orig.apply(this, args); firebaseQueueSave(); };
+}
+['addBudgetCategory','addExpense','addSaving','updateSaving','addDebt','makePayment',
+ 'addAsset','updateAsset','addIncome','addBill','markBillPaid','removeBill',
+ 'addEvent','addWorkout','addFood','removeItem'].forEach(patchForSync);
+
+// Hard-coded Firebase config
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAAckuS3UP0NjhRIiAveOeUmpCSr5iNsw4",
+  authDomain: "life-dashboard-4410e.firebaseapp.com",
+  projectId: "life-dashboard-4410e",
+  storageBucket: "life-dashboard-4410e.firebasestorage.app",
+  messagingSenderId: "363693911960",
+  appId: "1:363693911960:web:47c0d5315789db272a05ed"
+};
+
+async function autoConnectFirebase() {
+  // Always use hard-coded config; fall back to localStorage override if present
+  const saved = localStorage.getItem(LS_CONFIG_KEY);
+  const cfg = saved ? JSON.parse(saved) : FIREBASE_CONFIG;
+  FB.autosave = localStorage.getItem(LS_AUTOSAVE_KEY) !== '0';
+  setSyncStatus('loading', '… Connecting');
+  try {
+    await initFirebase(cfg);
+    // onAuthStateChanged will show auth or app screen
+  } catch(e) {
+    setSyncStatus('error', '✕ Auto-connect failed');
+    showAuthScreen();
+    console.error(e);
+  }
+}
+
+// ── INIT ─────────────────────────────────────────────────
+renderCalendar();
+renderMealSlots();
+document.getElementById('e-date').value = today();
+document.getElementById('ev-date').value = today();
+document.getElementById('w-date').value = today();
+document.getElementById('i-date').value = today();
+checkAndAutoLogBills();
+updateHUD();
+autoConnectFirebase();
+
+</script>
+</body>
+</html>
