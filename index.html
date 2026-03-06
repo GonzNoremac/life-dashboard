@@ -490,6 +490,17 @@ main {
 .green-card .stat-value { color: #fff; }
 .green-card .stat-label { color: rgba(255,255,255,0.55); }
 
+.red-card {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  color: #fff;
+  border: none;
+  box-shadow: 0 8px 24px rgba(220,38,38,0.22);
+}
+.red-card::before { display: none; }
+.red-card .card-title { color: rgba(255,255,255,0.55); }
+.red-card .stat-value { color: #fff; }
+.red-card .stat-label { color: rgba(255,255,255,0.55); }
+
 /* ── STAT VALUES ─────────────────────────────── */
 .stat-value {
   font-size: 30px;
@@ -928,26 +939,67 @@ tr:hover td { background: var(--surface2); }
 .debt-ring-label .pct { font-size:20px; font-weight:700; letter-spacing:-1px; }
 .debt-ring-label .sub { font-size:9px; color:var(--text-4); font-weight:700; text-transform:uppercase; letter-spacing:0.06em; }
 
-/* ── SCROLLBAR ───────────────────────────────── */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 2px; }
-
-/* ── ANIMATIONS ──────────────────────────────── */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* ── CONTEXT MENU ─────────────────────────────── */
+#ctx-menu {
+  position: fixed;
+  z-index: 500;
+  background: var(--surface);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 0.3rem;
+  min-width: 140px;
+  display: none;
+  flex-direction: column;
+  gap: 1px;
+  animation: ctxFade 0.12s ease;
 }
-.page.active > * { animation: fadeUp 0.28s ease both; }
-.page.active > *:nth-child(1) { animation-delay: 0ms; }
-.page.active > *:nth-child(2) { animation-delay: 50ms; }
-.page.active > *:nth-child(3) { animation-delay: 100ms; }
-.page.active > *:nth-child(4) { animation-delay: 150ms; }
-.page.active > *:nth-child(5) { animation-delay: 200ms; }
-
-/* ── INLINE EDIT ─────────────────────────────── */
-.inline-edit { display:flex; align-items:center; gap:0.4rem; }
-.inline-edit input { max-width:90px; padding:0.3rem 0.5rem; font-size:12px; }
+#ctx-menu.open { display: flex; }
+@keyframes ctxFade {
+  from { opacity: 0; transform: scale(0.95) translateY(-4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.ctx-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text-2);
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-family: 'DM Sans', sans-serif;
+  transition: background 0.1s;
+}
+.ctx-item:hover { background: var(--surface2); }
+.ctx-item.danger { color: var(--red); }
+.ctx-item.danger:hover { background: var(--red-light); }
+.ctx-divider { height: 1px; background: var(--border); margin: 0.2rem 0; }
+.ctx-btn {
+  width: 28px; height: 26px;
+  border-radius: var(--radius-sm);
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-3);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  transition: all 0.12s;
+  flex-shrink: 0;
+  font-family: Arial, sans-serif;
+  line-height: 1;
+  padding: 0 3px;
+}
+.ctx-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border-mid); }
 
 </style>
 </head>
@@ -1004,19 +1056,19 @@ tr:hover td { background: var(--surface2); }
     </div>
     <div class="card blue-card">
       <div class="card-title">This Month</div>
-      <div class="stat-value" id="budget-remaining">$0</div>
-      <div class="stat-label" id="budget-remaining-label">Remaining</div>
+      <div class="stat-value" id="balance-value">$0</div>
+      <div class="stat-label" id="balance-label">Balance</div>
       <div class="progress-wrap" style="margin-top:0.85rem">
         <div class="progress-bar" style="background:rgba(255,255,255,0.2)">
-          <div class="progress-fill" id="budget-bar" style="width:0%;background:rgba(255,255,255,0.9)"></div>
+          <div class="progress-fill" id="balance-bar" style="width:0%;background:rgba(255,255,255,0.9)"></div>
         </div>
       </div>
       <div style="margin-top:0.6rem;display:flex;justify-content:space-between;font-size:12px;font-weight:500">
-        <span style="color:rgba(255,255,255,0.7)" id="summary-income-label">Earned: $0</span>
-        <span style="color:rgba(255,255,255,0.7)" id="summary-expense-label">Spent: $0</span>
+        <span style="color:rgba(255,255,255,0.7)" id="balance-income-label">Income: $0</span>
+        <span style="color:rgba(255,255,255,0.7)" id="balance-spent-label">Spent: $0</span>
       </div>
     </div>
-    <div class="card green-card">
+    <div class="card red-card">
       <div class="card-title">Total Debt</div>
       <div class="stat-value" id="total-debt">$0</div>
       <div class="stat-label">Across all accounts</div>
@@ -1030,6 +1082,28 @@ tr:hover td { background: var(--surface2); }
       <div class="card-title">
         Budget Categories
         <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-budget')">+ Add</button>
+      </div>
+      <!-- Budget totals summary -->
+      <div id="budget-totals" style="display:none;background:var(--surface2);border-radius:var(--radius-md);padding:0.65rem 0.85rem;margin-bottom:1rem;border:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem">
+          <div style="text-align:center;flex:1">
+            <div style="font-size:10px;color:var(--text-4);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px">Budgeted</div>
+            <div style="font-size:15px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums" id="bt-budgeted">$0</div>
+          </div>
+          <div style="width:1px;height:28px;background:var(--border)"></div>
+          <div style="text-align:center;flex:1">
+            <div style="font-size:10px;color:var(--text-4);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px">Spent</div>
+            <div style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums" id="bt-spent">$0</div>
+          </div>
+          <div style="width:1px;height:28px;background:var(--border)"></div>
+          <div style="text-align:center;flex:1">
+            <div style="font-size:10px;color:var(--text-4);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px">Left</div>
+            <div style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums" id="bt-left">$0</div>
+          </div>
+        </div>
+        <div class="progress-bar" style="margin-top:0.65rem;height:5px">
+          <div id="bt-bar" class="progress-fill" style="width:0%;transition:width 0.4s ease"></div>
+        </div>
       </div>
       <div id="budget-list">
         <div class="empty"><span class="empty-icon">📊</span>No budget categories yet</div>
@@ -1363,15 +1437,49 @@ tr:hover td { background: var(--surface2); }
         </div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-title">Daily Targets</div>
-      <div class="form-group" style="margin-bottom:0.65rem">
+
+    <!-- Water Tracker Card -->
+    <div class="card" style="position:relative;overflow:hidden">
+      <div class="card-title">
+        Water Today
+        <span id="water-pct-badge" style="font-size:11px;font-weight:700;color:var(--blue)">0%</span>
+      </div>
+      <!-- Big display -->
+      <div style="display:flex;align-items:flex-end;gap:0.3rem;margin-bottom:0.5rem">
+        <span class="stat-value" id="water-today" style="color:var(--blue);font-size:28px">0</span>
+        <span style="font-size:12px;color:var(--text-3);padding-bottom:6px">oz of <span id="water-goal-display">64</span></span>
+      </div>
+      <!-- Progress bar -->
+      <div class="progress-bar" style="margin-bottom:0.75rem">
+        <div class="progress-fill fill-blue" id="water-bar" style="width:0%;transition:width 0.4s cubic-bezier(0.4,0,0.2,1)"></div>
+      </div>
+      <!-- Quick-add buttons -->
+      <div style="display:flex;gap:0.35rem;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="addWater(8)"  style="flex:1;min-width:40px">+8oz</button>
+        <button class="btn btn-ghost btn-sm" onclick="addWater(16)" style="flex:1;min-width:40px">+16oz</button>
+        <button class="btn btn-ghost btn-sm" onclick="addWater(32)" style="flex:1;min-width:40px">+32oz</button>
+        <button class="btn btn-ghost btn-sm" onclick="openModal('modal-water-custom')" style="flex:1;min-width:40px">+Custom</button>
+      </div>
+      <!-- Log list -->
+      <div id="water-log" style="margin-top:0.75rem;max-height:80px;overflow-y:auto"></div>
+    </div>
+  </div>
+
+  <!-- Daily Targets row -->
+  <div class="card section-gap">
+    <div class="card-title">Daily Targets</div>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap">
+      <div class="form-group" style="min-width:140px;flex:1">
         <label>Energy Target (kcal)</label>
         <input type="number" id="cal-goal-input" value="2000" onchange="updateCalGoal()">
       </div>
-      <div class="form-group">
+      <div class="form-group" style="min-width:140px;flex:1">
         <label>Protein Target (g)</label>
         <input type="number" id="protein-goal-input" value="150">
+      </div>
+      <div class="form-group" style="min-width:140px;flex:1">
+        <label>Water Goal (oz)</label>
+        <input type="number" id="water-goal-input" value="64" onchange="updateWaterGoal()">
       </div>
     </div>
   </div>
@@ -1830,6 +1938,23 @@ tr:hover td { background: var(--surface2); }
   </div>
 </div>
 
+<!-- Water Custom Amount Modal -->
+<div class="modal-overlay" id="modal-water-custom">
+  <div class="modal" style="max-width:320px">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal('modal-water-custom')">✕</button>
+    <div class="modal-title">Add Water</div>
+    <div class="form-group" style="margin-bottom:1.25rem">
+      <label>Amount (oz)</label>
+      <input type="number" id="water-custom-amount" placeholder="e.g. 12" min="1" max="200">
+    </div>
+    <div style="display:flex;gap:0.5rem;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal('modal-water-custom')">Cancel</button>
+      <button class="btn btn-primary" onclick="addWaterCustom()">Add</button>
+    </div>
+  </div>
+</div>
+
 <!-- Add Card -->
 <div class="modal-overlay" id="modal-add-card">
   <div class="modal">
@@ -1869,7 +1994,7 @@ tr:hover td { background: var(--surface2); }
   <div class="modal" style="max-width:520px">
     <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeModal('modal-settings')">✕</button>
-    <div class="modal-title">Sync Settings</div>
+    <div class="modal-title">Settings</div>
     <div class="settings-section">
       <div class="settings-section-title">Connection Status</div>
       <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem">
@@ -1920,6 +2045,97 @@ tr:hover td { background: var(--surface2); }
       </div>
       <input type="hidden" id="fb-autosave" value="1">
     </div>
+
+    <!-- CHANGELOG -->
+    <div class="settings-section">
+      <div class="settings-section-title" style="display:flex;align-items:center;justify-content:space-between">
+        Changelog
+        <span style="font-size:10px;font-weight:600;color:var(--accent);background:var(--accent-light);padding:2px 8px;border-radius:20px;letter-spacing:0.05em">v2.0 · Mar 2026</span>
+      </div>
+
+      <!-- Session 2 — current -->
+      <div style="margin-bottom:1rem">
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
+          <span style="font-size:11px;font-weight:700;color:var(--text);font-family:'DM Mono',monospace">Mar 6, 2026</span>
+          <span style="font-size:10px;font-weight:600;color:var(--green);background:var(--green-light);padding:1px 7px;border-radius:20px">Latest</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.4rem">
+          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
+            <span style="color:var(--blue);font-weight:700;flex-shrink:0;margin-top:1px">💧</span>
+            <span style="color:var(--text-2)"><strong>Water Tracker</strong> — daily intake log with +8/16/32oz quick-add buttons, custom amount modal, goal setting, and per-entry delete</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
+            <span style="color:var(--red);font-weight:700;flex-shrink:0;margin-top:1px">🔄</span>
+            <span style="color:var(--text-2)"><strong>Bills Rework</strong> — bills now have per-month due dates instead of a raw day number; Mark Paid / Undo work per any viewed month; recurrence awareness hides bills in off-cycle months</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
+            <span style="color:var(--accent);font-weight:700;flex-shrink:0;margin-top:1px">✏️</span>
+            <span style="color:var(--text-2)"><strong>Edit Everything</strong> — ••• context menu on every row across all sections; reuses existing modals pre-filled with current values</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
+            <span style="color:var(--green);font-weight:700;flex-shrink:0;margin-top:1px">📊</span>
+            <span style="color:var(--text-2)"><strong>Budget Totals Bar</strong> — live Budgeted / Spent / Left summary with color-coded progress bar at the top of Budget Categories</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
+            <span style="color:var(--blue);font-weight:700;flex-shrink:0;margin-top:1px">⚖️</span>
+            <span style="color:var(--text-2)"><strong>Balance Tracker</strong> — "This Month" card now shows Income − All Expenses (including paid bills) with a live progress bar</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
+            <span style="color:var(--orange);font-weight:700;flex-shrink:0;margin-top:1px">🐛</span>
+            <span style="color:var(--text-2)"><strong>Year Overview Fix</strong> — eliminated double-counting of bills in annual totals, chart, and month-by-month table; Expenses and Bills Paid columns now correctly separate</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
+            <span style="color:var(--orange);font-weight:700;flex-shrink:0;margin-top:1px">🐛</span>
+            <span style="color:var(--text-2)"><strong>Autopay + Persistence Fix</strong> — full state now persists to localStorage on every change; autopay correctly fires against restored data on page reload</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
+            <span style="color:var(--red);font-weight:700;flex-shrink:0;margin-top:1px">🎨</span>
+            <span style="color:var(--text-2)"><strong>Total Debt card</strong> — changed from green to red gradient to better reflect its meaning</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:1px;background:var(--border);margin-bottom:1rem"></div>
+
+      <!-- Session 1 — previous -->
+      <div>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
+          <span style="font-size:11px;font-weight:700;color:var(--text);font-family:'DM Mono',monospace">Mar 5, 2026</span>
+          <span style="font-size:10px;font-weight:600;color:var(--text-4);background:var(--surface2);padding:1px 7px;border-radius:20px">Previous</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.4rem">
+          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
+            <span style="color:var(--accent);font-weight:700;flex-shrink:0;margin-top:1px">🎨</span>
+            <span style="color:var(--text-2)"><strong>Fintech Redesign</strong> — Bloomberg/Robinhood aesthetic; DM Sans + DM Mono fonts; indigo accent; squared card borders with left-border hover</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
+            <span style="color:var(--blue);font-weight:700;flex-shrink:0;margin-top:1px">🌙</span>
+            <span style="color:var(--text-2)"><strong>Dark Mode</strong> — true near-black theme toggled via Settings; persists across sessions; applied before render to prevent flash</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
+            <span style="color:var(--green);font-weight:700;flex-shrink:0;margin-top:1px">📅</span>
+            <span style="color:var(--text-2)"><strong>Finance Month Filter</strong> — ‹ March 2026 › navigator on Finance page; all cards, budgets, expenses, income, and bills filter by selected month</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
+            <span style="color:var(--purple);font-weight:700;flex-shrink:0;margin-top:1px">📈</span>
+            <span style="color:var(--text-2)"><strong>Year Overview tab</strong> — smooth bezier area chart, top spending categories, bills paid summary, month-by-month table with savings rate</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
+            <span style="color:var(--red);font-weight:700;flex-shrink:0;margin-top:1px">💳</span>
+            <span style="color:var(--text-2)"><strong>Credit Card Tracking</strong> — card management with color chips; card selector on expenses and bills; monthly and all-time spend per card</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
+            <span style="color:var(--orange);font-weight:700;flex-shrink:0;margin-top:1px">📱</span>
+            <span style="color:var(--text-2)"><strong>Mobile Responsive</strong> — fixed bottom tab bar on phones, bottom-sheet modals, collapsed grids; three breakpoints (768 / 480 / 360px)</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
+            <span style="color:var(--blue);font-weight:700;flex-shrink:0;margin-top:1px">☁️</span>
+            <span style="color:var(--text-2)"><strong>Firebase Auth + Sync</strong> — email/password login, Firestore persistence, auto-save toggle, sync status pill in nav</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:0.5rem">
       <button class="btn btn-primary" onclick="closeModal('modal-settings')">Done</button>
     </div>
@@ -1953,6 +2169,13 @@ tr:hover td { background: var(--surface2); }
 
 <!-- APP WRAPPER -->
 <div id="app-wrapper" style="display:none">
+
+<!-- CONTEXT MENU -->
+<div id="ctx-menu">
+  <button class="ctx-item" id="ctx-edit" onclick="ctxEdit()">✏️ Edit</button>
+  <div class="ctx-divider"></div>
+  <button class="ctx-item danger" id="ctx-delete" onclick="ctxDelete()">🗑 Delete</button>
+</div>
 
 <!-- TOAST -->
 <div class="loot-toast" id="loot-toast"></div>
@@ -2083,14 +2306,16 @@ function renderBudgets() {
   const monthKey = financeMonthStr();
   const todayStr = today();
 
-  const billSpendByBudgetCat = {};
-  const upcomingBillsByBudgetCat = {};
+  // Tally all bills by category — paid and upcoming both count toward the budget
+  const billPaidByCat = {};
+  const billUpcomingByCat = {};
   state.bills.forEach(b => {
     const isPaid = b.paidMonths.includes(monthKey);
-    if (isPaid) billSpendByBudgetCat[b.cat] = (billSpendByBudgetCat[b.cat] || 0) + b.amount;
-    else {
-      const dueDate = billDueDateThisMonth(b);
-      if (todayStr < dueDate) upcomingBillsByBudgetCat[b.cat] = (upcomingBillsByBudgetCat[b.cat] || 0) + b.amount;
+    if (isPaid) {
+      billPaidByCat[b.cat] = (billPaidByCat[b.cat] || 0) + b.amount;
+    } else {
+      // Upcoming or overdue — still counts as committed budget
+      billUpcomingByCat[b.cat] = (billUpcomingByCat[b.cat] || 0) + b.amount;
     }
   });
 
@@ -2099,56 +2324,65 @@ function renderBudgets() {
     return;
   }
 
+  // Collect bill cats that have a matching budget (so we know which are truly unbudgeted)
+  const budgetedCats = new Set(state.budgets.map(b => b.name));
+
   let html = '';
   html += state.budgets.map(b => {
+    // Regular expenses (not from bills) in this category
     const expenseSpent = state.expenses.filter(e => e.cat === b.name && !e.fromBill && e.date.startsWith(monthKey)).reduce((s,e) => s + e.amount, 0);
-    const billPaid = billSpendByBudgetCat[b.name] || 0;
-    const billUpcoming = upcomingBillsByBudgetCat[b.name] || 0;
+    const billPaid     = billPaidByCat[b.name]     || 0;
+    const billUpcoming = billUpcomingByCat[b.name] || 0;
+
+    // Total spent = regular expenses + paid bills
     const totalSpent = expenseSpent + billPaid;
-    const pct = Math.min(100, (totalSpent / b.limit) * 100);
-    const committedPct = Math.min(100, ((totalSpent + billUpcoming) / b.limit) * 100);
-    const overBudget = totalSpent > b.limit;
+    // Total committed = spent + upcoming bills
+    const totalCommitted = totalSpent + billUpcoming;
+
+    const pct          = Math.min(100, (totalSpent     / b.limit) * 100);
+    const committedPct = Math.min(100, (totalCommitted / b.limit) * 100);
+    const overBudget   = totalCommitted > b.limit;
+
     const billDetail = (billPaid > 0 || billUpcoming > 0) ? `
       <div style="display:flex;gap:1rem;margin-top:0.3rem;font-size:10px">
-        ${billPaid > 0 ? `<span style="color:var(--red)">💳 ${fmt(billPaid)} bills paid</span>` : ''}
+        ${billPaid     > 0 ? `<span style="color:var(--red)">✓ ${fmt(billPaid)} bills paid</span>`       : ''}
         ${billUpcoming > 0 ? `<span style="color:var(--orange)">⏰ ${fmt(billUpcoming)} upcoming</span>` : ''}
       </div>` : '';
+
     return `<div class="progress-wrap">
       <div class="progress-label">
         <span style="display:flex;align-items:center;gap:0.5rem">
           ${b.name}
-          <button class="btn btn-danger btn-sm" style="padding:1px 6px;font-size:10px;line-height:1.4" onclick="removeItem('budgets','${b.id}',renderBudgets,updateExpenseCategorySelect,updateSummary)">✕</button>
+          <button class="ctx-btn" style="width:22px;height:22px;font-size:12px" onclick="openCtx(event, () => editBudget('${b.id}'), () => removeItem('budgets','${b.id}',renderBudgets,updateExpenseCategorySelect,updateSummary))">•••</button>
         </span>
-        <span class="${overBudget ? 'red' : 'muted'}">${fmt(totalSpent)} / ${fmt(b.limit)}</span>
+        <span class="${overBudget ? 'red' : 'muted'}">${fmt(totalCommitted)} / ${fmt(b.limit)}</span>
       </div>
       <div class="progress-bar" style="position:relative">
-        ${billUpcoming > 0 ? `<div class="progress-fill" style="width:${committedPct}%;background:rgba(255,149,0,0.2);position:absolute;top:0;left:0;height:100%;border-radius:99px"></div>` : ''}
+        ${billUpcoming > 0 ? `<div class="progress-fill" style="width:${committedPct}%;background:rgba(255,149,0,0.18);position:absolute;top:0;left:0;height:100%;border-radius:2px"></div>` : ''}
         <div class="progress-fill fill-${overBudget ? 'red' : b.color}" style="width:${pct}%;position:relative"></div>
       </div>
       ${billDetail}
     </div>`;
   }).join('');
 
+  // Unbudgeted bills — bills whose category has no matching budget
   const allBillCats = [...new Set(state.bills.map(b => b.cat))];
-  const unmatchedCats = allBillCats.filter(cat => !state.budgets.find(b => b.name === cat));
+  const unmatchedCats = allBillCats.filter(cat => !budgetedCats.has(cat));
   if (unmatchedCats.length) {
     html += `<div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
-      <div style="font-size:10px;color:var(--text-4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.75rem">Bills (unbudgeted)</div>`;
+      <div style="font-size:10px;color:var(--text-4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.75rem">Unbudgeted Bills</div>`;
     html += unmatchedCats.map(cat => {
       const catBills = state.bills.filter(b => b.cat === cat);
-      const paid = catBills.filter(b => b.paidMonths.includes(monthKey)).reduce((s,b) => s + b.amount, 0);
-      const upcoming = catBills.filter(b => !b.paidMonths.includes(monthKey) && todayStr < billDueDateThisMonth(b)).reduce((s,b) => s + b.amount, 0);
-      const total = catBills.reduce((s,b) => s + b.amount, 0);
+      const paid     = catBills.filter(b =>  b.paidMonths.includes(monthKey)).reduce((s,b) => s + b.amount, 0);
+      const upcoming = catBills.filter(b => !b.paidMonths.includes(monthKey)).reduce((s,b) => s + b.amount, 0);
+      const total    = paid + upcoming;
       return `<div class="progress-wrap">
         <div class="progress-label">
           <span style="color:var(--text-3)">${cat}</span>
-          <span style="color:var(--text-3)">${fmt(paid + upcoming)} / ${fmt(total)}</span>
+          <span style="color:var(--text-3)">${fmt(total)}/mo — <span style="font-size:10px">no budget set</span></span>
         </div>
-        <div class="progress-bar">
-          <div class="progress-fill fill-red" style="width:${Math.min(100,(paid/total)*100)}%"></div>
-        </div>
-        <div style="font-size:10px;margin-top:0.3rem;display:flex;gap:1rem">
-          ${paid > 0 ? `<span style="color:var(--red)">💳 ${fmt(paid)} paid</span>` : ''}
+        <div style="font-size:10px;margin-top:0.2rem;display:flex;gap:1rem">
+          ${paid     > 0 ? `<span style="color:var(--green)">✓ ${fmt(paid)} paid</span>`         : ''}
           ${upcoming > 0 ? `<span style="color:var(--orange)">⏰ ${fmt(upcoming)} upcoming</span>` : ''}
         </div>
       </div>`;
@@ -2157,6 +2391,33 @@ function renderBudgets() {
   }
 
   el.innerHTML = html || '<div class="empty"><div class="empty-icon">📊</div>No budget categories yet</div>';
+
+  // ── Budget totals summary bar ─────────────────────────
+  const totalsEl = document.getElementById('budget-totals');
+  if (!state.budgets.length) {
+    totalsEl.style.display = 'none';
+    return;
+  }
+  const totalBudgeted = state.budgets.reduce((s, b) => s + b.limit, 0);
+  const totalSpentAll = state.budgets.reduce((s, b) => {
+    const expenseSpent = state.expenses.filter(e => e.cat === b.name && !e.fromBill && e.date.startsWith(monthKey)).reduce((a, e) => a + e.amount, 0);
+    const billPaid     = billPaidByCat[b.name] || 0;
+    const billUpcoming = billUpcomingByCat[b.name] || 0;
+    return s + expenseSpent + billPaid + billUpcoming;
+  }, 0);
+  const totalLeft = totalBudgeted - totalSpentAll;
+  const overAll   = totalLeft < 0;
+  const pctUsed   = Math.min(100, (totalSpentAll / totalBudgeted) * 100) || 0;
+
+  document.getElementById('bt-budgeted').textContent = fmt(totalBudgeted);
+  document.getElementById('bt-spent').textContent    = fmt(totalSpentAll);
+  document.getElementById('bt-spent').style.color    = overAll ? 'var(--red)' : 'var(--text)';
+  document.getElementById('bt-left').textContent     = (overAll ? '-' : '') + fmt(Math.abs(totalLeft));
+  document.getElementById('bt-left').style.color     = overAll ? 'var(--red)' : 'var(--green)';
+  const bar = document.getElementById('bt-bar');
+  bar.style.width      = pctUsed + '%';
+  bar.style.background = overAll ? 'var(--red)' : pctUsed > 80 ? 'var(--orange)' : 'var(--accent)';
+  totalsEl.style.display = 'block';
 }
 
 
@@ -2192,7 +2453,7 @@ function renderExpenses() {
       <td>${e.cat ? `<span class="tag tag-blue">${e.cat}</span>` : '<span style="color:var(--text-4)">—</span>'}</td>
       <td>${cardBadge}</td>
       <td style="font-weight:600;color:var(--red)">${fmt(e.amount)}</td>
-      <td><button class="btn btn-danger btn-sm" onclick="removeItem('expenses','${e.id}',renderExpenses,renderBudgets,updateSummary,renderCards)">✕</button></td>
+      <td><button class="ctx-btn" onclick="openCtx(event, () => editExpense('${e.id}'), () => { removeItem('expenses','${e.id}',renderExpenses,renderBudgets,updateSummary,renderCards); })">•••</button></td>
     </tr>`;
   }).join('');
 }
@@ -2286,7 +2547,7 @@ function renderCards() {
       ${recentRows}
 
       <div style="margin-top:0.75rem">
-        <button class="btn btn-danger btn-sm" onclick="removeItem('cards','${c.id}',renderCards,updateCardSelects)">Remove Card</button>
+        <button class="ctx-btn" onclick="openCtx(event, () => editCard('${c.id}'), () => removeItem('cards','${c.id}',renderCards,updateCardSelects))">•••</button>
       </div>
     </div>`;
   }).join('');
@@ -2357,9 +2618,20 @@ function addBill() {
   updateSummary();
 }
 
+function billDueDateForMonth(bill, monthStr) {
+  // monthStr = 'YYYY-MM', returns 'YYYY-MM-DD'
+  const [yr, mo] = monthStr.split('-').map(Number);
+  // Clamp day to last day of that month (e.g. day 31 in Feb → 28/29)
+  const lastDay = new Date(yr, mo, 0).getDate();
+  const day = Math.min(bill.day, lastDay);
+  return `${monthStr}-${String(day).padStart(2,'0')}`;
+}
+
+// Legacy shim — used by calendar sync which always works from real current month
 function billDueDateThisMonth(bill) {
   const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(bill.day).padStart(2,'0')}`;
+  const ms = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  return billDueDateForMonth(bill, ms);
 }
 
 function billMonthKey(bill) {
@@ -2368,23 +2640,19 @@ function billMonthKey(bill) {
 }
 
 function syncBillToCalendar(bill) {
-  // Remove old calendar events for this bill, re-add for next 12 months
   state.events = state.events.filter(e => e.billId !== bill.id);
   const now = new Date();
   const monthsAhead = bill.recur === 'Monthly' ? 12 : bill.recur === 'Bi-monthly' ? 6 : bill.recur === 'Quarterly' ? 4 : 1;
   for (let i = 0; i < monthsAhead; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() + i, bill.day);
-    // For non-monthly, only add on correct intervals
     if (bill.recur === 'Bi-monthly' && i % 2 !== 0) continue;
     if (bill.recur === 'Quarterly' && i % 3 !== 0) continue;
-    const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(bill.day).padStart(2,'0')}`;
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const ms = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const ds = billDueDateForMonth(bill, ms);
     state.events.push({
-      id: uid(),
-      billId: bill.id,
+      id: uid(), billId: bill.id,
       title: `💳 ${bill.name} — ${fmt(bill.amount)}`,
-      date: ds,
-      time: '',
-      cat: 'red',
+      date: ds, time: '', cat: 'red',
       notes: `${bill.recur} bill · ${bill.cat}`
     });
   }
@@ -2397,11 +2665,11 @@ function syncAllBillsToCalendar() {
 
 function checkAndAutoLogBills() {
   const todayStr = today();
+  const realMonthStr = todayStr.slice(0, 7); // 'YYYY-MM' of actual today
   state.bills.forEach(bill => {
-    const dueDate = billDueDateThisMonth(bill);
-    const monthKey = billMonthKey(bill);
-    if (bill.autoPay && todayStr >= dueDate && !bill.paidMonths.includes(monthKey)) {
-      bill.paidMonths.push(monthKey);
+    const dueDate = billDueDateForMonth(bill, realMonthStr);
+    if (bill.autoPay && todayStr >= dueDate && !bill.paidMonths.includes(realMonthStr)) {
+      bill.paidMonths.push(realMonthStr);
       state.expenses.push({
         id: uid(), desc: bill.name, amount: bill.amount,
         cat: bill.cat, card: bill.card || '', date: dueDate, fromBill: true
@@ -2409,40 +2677,54 @@ function checkAndAutoLogBills() {
     }
   });
   renderExpenses(); renderBudgets(); renderBills(); updateSummary();
+  saveStateLocal();
 }
 
-function markBillPaid(id) {
+function markBillPaid(id, monthStr) {
   const bill = state.bills.find(b => b.id === id);
   if (!bill) return;
-  const monthKey = billMonthKey(bill);
-  if (!bill.paidMonths.includes(monthKey)) {
-    bill.paidMonths.push(monthKey);
-    const dueDate = billDueDateThisMonth(bill);
+  const ms = monthStr || financeMonthStr();
+  if (!bill.paidMonths.includes(ms)) {
+    bill.paidMonths.push(ms);
+    const dueDate = billDueDateForMonth(bill, ms);
     state.expenses.push({
       id: uid(), desc: bill.name, amount: bill.amount,
       cat: bill.cat, card: bill.card || '', date: dueDate, fromBill: true
     });
     renderExpenses(); renderBudgets(); updateSummary();
+    saveStateLocal();
   }
   renderBills();
+}
+
+function unmarkBillPaid(id, monthStr) {
+  const bill = state.bills.find(b => b.id === id);
+  if (!bill) return;
+  const ms = monthStr || financeMonthStr();
+  bill.paidMonths = bill.paidMonths.filter(m => m !== ms);
+  const dueDate = billDueDateForMonth(bill, ms);
+  state.expenses = state.expenses.filter(e => !(e.fromBill && e.desc === bill.name && e.date === dueDate));
+  renderExpenses(); renderBudgets(); renderBills(); updateSummary();
+  saveStateLocal();
 }
 
 function renderBills() {
   const body = document.getElementById('bills-body');
   const todayStr = today();
+  const viewMs = financeMonthStr(); // the month currently being viewed
+  const realMs  = todayStr.slice(0, 7); // actual current real month
   const catColors = { Housing:'tag-blue', Utilities:'tag-yellow', Subscriptions:'tag-purple', Insurance:'tag-green', Transport:'tag-blue', 'Debt Payment':'tag-red', Other:'tag-purple' };
 
-  // Monthly-equivalent total
   const monthlyTotal = state.bills.reduce((s,b) => {
     const factor = b.recur === 'Monthly' ? 1 : b.recur === 'Bi-monthly' ? 0.5 : b.recur === 'Quarterly' ? 1/3 : 1/12;
     return s + b.amount * factor;
   }, 0);
   document.getElementById('total-bills-display').textContent = fmt(monthlyTotal) + '/mo';
 
-  // Due badge
+  // Overdue badge only counts real current month unpaid non-autopay bills
   const overdueBills = state.bills.filter(b => {
-    const dueDate = billDueDateThisMonth(b);
-    return !b.autoPay && todayStr > dueDate && !b.paidMonths.includes(billMonthKey(b));
+    const dueDate = billDueDateForMonth(b, realMs);
+    return !b.autoPay && todayStr > dueDate && !b.paidMonths.includes(realMs);
   });
   const badge = document.getElementById('bills-due-badge');
   if (overdueBills.length) {
@@ -2453,44 +2735,75 @@ function renderBills() {
   }
 
   if (!state.bills.length) {
-    body.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-4)">No bills added — bills will auto-log as expenses on their due date</td></tr>';
+    body.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-4)">No bills added</td></tr>';
     return;
   }
 
-  body.innerHTML = state.bills.map(b => {
-    const dueDate = billDueDateThisMonth(b);
-    const monthKey = billMonthKey(b);
-    const isPaid = b.paidMonths.includes(monthKey);
-    const isOverdue = !isPaid && todayStr > dueDate;
-    const isDueSoon = !isPaid && !isOverdue && (new Date(dueDate) - new Date(todayStr)) / 86400000 <= 5;
+  // Determine if bill is due in the viewed month (respects recurrence)
+  function billDueInMonth(bill, ms) {
+    if (bill.recur === 'Monthly') return true;
+    // For non-monthly, check if this month falls on a cycle from the first bill month
+    const [yr, mo] = ms.split('-').map(Number);
+    const [firstYr, firstMo] = [new Date().getFullYear(), new Date().getMonth() + 1];
+    const monthDiff = (yr - firstYr) * 12 + (mo - firstMo);
+    if (bill.recur === 'Bi-monthly') return monthDiff % 2 === 0;
+    if (bill.recur === 'Quarterly')  return monthDiff % 3 === 0;
+    if (bill.recur === 'Annually')   return monthDiff % 12 === 0;
+    return true;
+  }
 
+  body.innerHTML = state.bills.map(b => {
+    const dueDate  = billDueDateForMonth(b, viewMs);
+    const isPaid   = b.paidMonths.includes(viewMs);
+    const dueInMonth = billDueInMonth(b, viewMs);
+
+    // Status relative to viewed month
     let statusHtml;
-    if (isPaid && b.autoPay)  statusHtml = `<span class="tag tag-green">⚡ Auto-paid</span>`;
-    else if (isPaid)           statusHtml = `<span class="tag tag-green">✓ Paid</span>`;
-    else if (isOverdue)        statusHtml = `<span class="tag tag-red">⚠ Late</span>`;
-    else if (isDueSoon)        statusHtml = `<span class="tag tag-yellow">⏰ Due soon</span>`;
-    else                       statusHtml = `<span class="tag" style="background:var(--surface3);color:var(--text-3)">Upcoming</span>`;
+    if (!dueInMonth) {
+      statusHtml = `<span class="tag" style="background:var(--surface3);color:var(--text-4)">Not due</span>`;
+    } else if (isPaid && b.autoPay) {
+      statusHtml = `<span class="tag tag-green">⚡ Auto-paid</span>`;
+    } else if (isPaid) {
+      statusHtml = `<span class="tag tag-green">✓ Paid</span>`;
+    } else if (viewMs === realMs) {
+      // Only show overdue/soon for the real current month
+      const isOverdue  = todayStr > dueDate;
+      const isDueSoon  = !isOverdue && (new Date(dueDate) - new Date(todayStr)) / 86400000 <= 5;
+      if (isOverdue)       statusHtml = `<span class="tag tag-red">⚠ Late</span>`;
+      else if (isDueSoon)  statusHtml = `<span class="tag tag-yellow">⏰ Due soon</span>`;
+      else                 statusHtml = `<span class="tag" style="background:var(--surface3);color:var(--text-3)">Upcoming</span>`;
+    } else if (viewMs < realMs) {
+      statusHtml = `<span class="tag tag-red">⚠ Unpaid</span>`;
+    } else {
+      statusHtml = `<span class="tag" style="background:var(--surface3);color:var(--text-3)">Upcoming</span>`;
+    }
 
     const autoPayBadge = b.autoPay
-      ? `<span style="font-size:10px;font-weight:600;color:var(--blue);background:var(--blue-mid);padding:1px 6px;border-radius:20px;margin-left:5px">AUTO</span>`
+      ? `<span style="font-size:10px;font-weight:600;color:var(--blue);background:var(--blue-mid);padding:1px 6px;border-radius:3px;margin-left:5px">AUTO</span>`
       : '';
 
     const cardObj = state.cards.find(c => c.id === b.card);
     const cardBadge = cardObj
-      ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:20px;background:${cardObj.color}18;color:${cardObj.color}"><span style="width:6px;height:6px;border-radius:50%;background:${cardObj.color};display:inline-block"></span>${cardObj.name}</span>`
+      ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:3px;background:${cardObj.color}18;color:${cardObj.color}"><span style="width:6px;height:6px;border-radius:50%;background:${cardObj.color};display:inline-block"></span>${cardObj.name}</span>`
       : '<span style="color:var(--text-4);font-size:12px">—</span>';
+
+    const actionBtn = dueInMonth
+      ? isPaid
+        ? `<button class="btn btn-ghost btn-sm" onclick="unmarkBillPaid('${b.id}','${viewMs}')">Undo</button>`
+        : `<button class="btn btn-ghost btn-sm" onclick="markBillPaid('${b.id}','${viewMs}')">Mark Paid</button>`
+      : '';
 
     return `<tr>
       <td style="font-weight:600">${b.name}${autoPayBadge}</td>
       <td><span class="tag ${catColors[b.cat] || 'tag-purple'}">${b.cat}</span></td>
       <td style="font-weight:600;color:var(--red)">${fmt(b.amount)}</td>
-      <td style="color:var(--text-3)">Day ${b.day}</td>
+      <td style="color:var(--text-3)">${dueInMonth ? dueDate : '—'}</td>
       <td style="color:var(--text-3)">${b.recur}</td>
       <td>${cardBadge}</td>
       <td>${statusHtml}</td>
-      <td style="display:flex;gap:0.4rem">
-        ${!isPaid ? `<button class="btn btn-ghost btn-sm" onclick="markBillPaid('${b.id}')">Mark Paid</button>` : ''}
-        <button class="btn btn-danger btn-sm" onclick="removeBill('${b.id}')">✕</button>
+      <td style="display:flex;gap:0.4rem;flex-wrap:wrap">
+        ${actionBtn}
+        <button class="ctx-btn" onclick="openCtx(event, () => editBill('${b.id}'), () => removeBill('${b.id}'))">•••</button>
       </td>
     </tr>`;
   }).join('');
@@ -2529,7 +2842,7 @@ function renderSavings() {
       <div style="margin-top:0.5rem;display:flex;gap:0.5rem">
         <input type="number" placeholder="Update amount" id="sup-${s.id}" style="flex:1" onkeydown="if(event.key==='Enter')updateSaving('${s.id}')">
         <button class="btn btn-ghost btn-sm" onclick="updateSaving('${s.id}')">Update</button>
-        <button class="btn btn-danger btn-sm" onclick="removeItem('savings','${s.id}',renderSavings,updateSummary)">✕</button>
+        <button class="ctx-btn" onclick="openCtx(event, () => editSaving('${s.id}'), () => { removeItem('savings','${s.id}',renderSavings,updateSummary); })">•••</button>
       </div>
     </div>`;
   }).join('');
@@ -2576,7 +2889,7 @@ function renderDebts() {
       <div style="margin-top:0.5rem;display:flex;gap:0.5rem">
         <input type="number" placeholder="Payment amount" id="pay-${d.id}" style="flex:1" onkeydown="if(event.key==='Enter')makePayment('${d.id}')">
         <button class="btn btn-ghost btn-sm" onclick="makePayment('${d.id}')">Pay</button>
-        <button class="btn btn-danger btn-sm" onclick="removeItem('debts','${d.id}',renderDebts,updateSummary)">✕</button>
+        <button class="ctx-btn" onclick="openCtx(event, () => editDebt('${d.id}'), () => { removeItem('debts','${d.id}',renderDebts,updateSummary); })">•••</button>
       </div>
     </div>`;
   }).join('');
@@ -2623,7 +2936,7 @@ function renderAssets() {
         <div style="display:flex;gap:0.4rem;align-items:center">
           <input type="number" placeholder="New value" id="aupd-${a.id}" style="width:110px;padding:0.3rem 0.5rem;font-size:11px" onkeydown="if(event.key==='Enter')updateAsset('${a.id}')">
           <button class="btn btn-ghost btn-sm" onclick="updateAsset('${a.id}')">Update</button>
-          <button class="btn btn-danger btn-sm" onclick="removeItem('assets','${a.id}',renderAssets,updateSummary)">✕</button>
+          <button class="ctx-btn" onclick="openCtx(event, () => editAsset('${a.id}'), () => { removeItem('assets','${a.id}',renderAssets,updateSummary); })">•••</button>
         </div>
       </td>
     </tr>`;
@@ -2670,7 +2983,7 @@ function renderIncome() {
         <td><span class="tag ${typeColors[i.type] || 'tag-green'}">${i.type}</span></td>
         <td style="font-weight:600;color:var(--green)">${fmt(i.amount)}</td>
         <td style="color:var(--text-3)">${i.notes || '—'}</td>
-        <td><button class="btn btn-danger btn-sm" onclick="removeItem('income','${i.id}',renderIncome,updateSummary)">✕</button></td>
+        <td><button class="ctx-btn" onclick="openCtx(event, () => editIncome('${i.id}'), () => { removeItem('income','${i.id}',renderIncome,updateSummary); })">•••</button></td>
       </tr>`).join('');
   }
 
@@ -2701,47 +3014,38 @@ function updateSummary() {
 
   const ms = financeMonthStr();
   const totalBudget = state.budgets.reduce((s,x) => s + x.limit, 0);
+
+  // Income this month
   const thisMonthIncome = state.income.filter(i => i.date.startsWith(ms)).reduce((s,i) => s + i.amount, 0);
 
-  // All expenses this month (for display)
-  const thisMonthSpent = state.expenses.filter(e => e.date.startsWith(ms)).reduce((s,e) => s + e.amount, 0);
+  // All expenses this month (regular + bill-logged)
+  const thisMonthAllSpent = state.expenses.filter(e => e.date.startsWith(ms)).reduce((s,e) => s + e.amount, 0);
 
-  // Regular expenses only (exclude bill-logged) — used for budget remaining calc
+  // Bills paid this month that weren't auto-logged as expenses (manual Mark Paid)
+  // Note: markBillPaid already pushes to state.expenses with fromBill:true so they're included above
+
+  // Balance = income − total spent
+  const balance = thisMonthIncome - thisMonthAllSpent;
+  const isNegative = balance < 0;
+
+  document.getElementById('balance-value').textContent = (isNegative ? '-' : '') + fmt(Math.abs(balance));
+  document.getElementById('balance-value').style.color = isNegative ? 'rgba(255,180,180,1)' : '#fff';
+  document.getElementById('balance-label').textContent = isNegative ? 'Over budget' : thisMonthIncome > 0 ? 'Remaining balance' : 'Log income to see balance';
+  document.getElementById('balance-income-label').textContent = `Income: ${fmt(thisMonthIncome)}`;
+  document.getElementById('balance-spent-label').textContent  = `Spent: ${fmt(thisMonthAllSpent)}`;
+
+  // Progress bar = % of income spent (capped at 100)
+  const pct = thisMonthIncome > 0 ? Math.min(100, (thisMonthAllSpent / thisMonthIncome) * 100) : 0;
+  const balBar = document.getElementById('balance-bar');
+  balBar.style.width = pct + '%';
+  balBar.style.background = pct > 100 ? 'rgba(255,100,100,0.9)' : pct > 80 ? 'rgba(255,200,50,0.9)' : 'rgba(255,255,255,0.9)';
+
+  // Kept for budget card and year view calculations
   const thisMonthRegularSpent = state.expenses.filter(e => e.date.startsWith(ms) && !e.fromBill).reduce((s,e) => s + e.amount, 0);
-
-  // Bills paid this month (tracked separately)
-  const thisMonthBillsPaid = state.bills.filter(b => b.paidMonths.includes(ms)).reduce((s,b) => s + b.amount, 0);
-
-  const totalBillsMonthly = state.bills.reduce((s,b) => {
-    const factor = b.recur === 'Monthly' ? 1 : b.recur === 'Bi-monthly' ? 0.5 : b.recur === 'Quarterly' ? 1/3 : 1/12;
-    return s + b.amount * factor;
-  }, 0);
-
-  let remaining, remainingLabel;
-  if (thisMonthIncome > 0) {
-    // Income mode: income minus everything (regular + bills)
-    remaining = thisMonthIncome - thisMonthSpent;
-    remainingLabel = 'Remaining (income − spent)';
-  } else if (totalBudget > 0) {
-    // Budget mode: only count regular expenses against budget, bills are separate
-    remaining = totalBudget - thisMonthRegularSpent;
-    remainingLabel = 'Remaining (budget − expenses)';
-  } else {
-    remaining = 0;
-    remainingLabel = 'Log income or set a budget';
-  }
-
-  document.getElementById('budget-remaining').textContent = fmt(Math.abs(remaining));
-  document.getElementById('budget-remaining').className = 'stat-value ' + (remaining >= 0 ? '' : 'red');
-  document.getElementById('budget-remaining-label').textContent = remainingLabel;
-  document.getElementById('summary-income-label').textContent = `Income: ${fmt(thisMonthIncome)}`;
-  document.getElementById('summary-expense-label').textContent = `Spent: ${fmt(thisMonthRegularSpent)}${thisMonthBillsPaid > 0 ? ` + ${fmt(thisMonthBillsPaid)} bills` : ''}`;
-
-  const base = thisMonthIncome > 0 ? thisMonthIncome : totalBudget;
-  const spentForBar = thisMonthIncome > 0 ? thisMonthSpent : thisMonthRegularSpent;
-  const pct = base > 0 ? Math.min(100, (spentForBar / base) * 100) : (totalBillsMonthly > 0 ? 50 : 0);
-  document.getElementById('budget-bar').style.width = pct + '%';
-  document.getElementById('budget-bar').className = 'progress-fill ' + (pct > 90 ? 'fill-red' : pct > 70 ? 'fill-yellow' : 'fill-accent');
+  const budgetedCatNames = new Set(state.budgets.map(b => b.name));
+  const thisMonthBudgetedBills = state.bills.filter(b => budgetedCatNames.has(b.cat)).reduce((s,b) => s + b.amount, 0);
+  const thisMonthUnbudgetedBillsPaid = state.bills.filter(b => !budgetedCatNames.has(b.cat) && b.paidMonths.includes(ms)).reduce((s,b) => s + b.amount, 0);
+  const thisMonthBudgetSpent = thisMonthRegularSpent + thisMonthBudgetedBills;
 
   document.getElementById('total-debt').textContent = fmt(totalDebt);
   const totalOriginal = state.debts.reduce((s,x) => s + x.total, 0);
@@ -2786,7 +3090,7 @@ function renderEvents(showAll) {
         <div class="event-meta">${ev.date}${ev.time ? ' · ' + ev.time : ''}</div>
         ${ev.notes ? `<div class="event-meta" style="margin-top:2px">${ev.notes}</div>` : ''}
       </div>
-      <button class="btn btn-danger btn-sm" onclick="removeItem('events','${ev.id}',renderEvents,renderCalendar)">✕</button>
+      <button class="ctx-btn" onclick="openCtx(event, ev.billId ? null : () => editEvent('${ev.id}'), () => { removeItem('events','${ev.id}',renderEvents,renderCalendar); })">•••</button>
     </div>`).join('');
 
   const moreBtn = !showAll && remaining > 0
@@ -2869,7 +3173,7 @@ function renderWorkouts() {
         <div class="muted" style="font-size:10px">${w.date} · ${w.duration} min${w.volume ? ' · ' + w.volume + 'kg' : ''}</div>
         ${w.notes ? `<div class="muted" style="font-size:10px;margin-top:2px">${w.notes}</div>` : ''}
       </div>
-      <button class="btn btn-danger btn-sm" onclick="removeItem('workouts','${w.id}',renderWorkouts,updateHealthSummary)">✕</button>
+      <button class="ctx-btn" onclick="openCtx(event, () => editWorkout('${w.id}'), () => { removeItem('workouts','${w.id}',renderWorkouts,updateHealthSummary); })">•••</button>
     </div>`).join('');
 }
 
@@ -2935,7 +3239,7 @@ function renderFoods() {
       <td><span class="tag tag-purple">${f.meal}</span></td>
       <td class="yellow">${f.cal}</td>
       <td class="muted" style="font-size:11px">${f.protein}/${f.carbs}/${f.fats}g</td>
-      <td><button class="btn btn-danger btn-sm" onclick="removeItem('foods','${f.id}',renderFoods,renderMealSlots,updateNutritionSummary)">✕</button></td>
+      <td><button class="ctx-btn" onclick="openCtx(event, () => editFood('${f.id}'), () => { removeItem('foods','${f.id}',renderFoods,renderMealSlots,updateNutritionSummary); })">•••</button></td>
     </tr>`).join('');
 }
 
@@ -2973,7 +3277,390 @@ function updateCalGoal() {
   updateNutritionSummary();
 }
 
-// ═══════════════════ HELPERS ═══════════════════
+// ── WATER TRACKING ────────────────────────────────────────
+
+function waterTodayKey() { return 'water-' + today(); }
+
+function getWaterLog() {
+  const raw = localStorage.getItem(waterTodayKey());
+  return raw ? JSON.parse(raw) : [];
+}
+
+function saveWaterLog(log) {
+  localStorage.setItem(waterTodayKey(), JSON.stringify(log));
+}
+
+function addWater(oz) {
+  const log = getWaterLog();
+  log.push({ id: uid(), oz, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+  saveWaterLog(log);
+  renderWater();
+  showLoot(`+${oz}oz water logged`);
+}
+
+function addWaterCustom() {
+  const oz = parseInt(document.getElementById('water-custom-amount').value) || 0;
+  if (!oz || oz <= 0) return;
+  closeModal('modal-water-custom');
+  document.getElementById('water-custom-amount').value = '';
+  addWater(oz);
+}
+
+function removeWaterEntry(id) {
+  saveWaterLog(getWaterLog().filter(e => e.id !== id));
+  renderWater();
+}
+
+function updateWaterGoal() {
+  const val = parseInt(document.getElementById('water-goal-input').value) || 64;
+  localStorage.setItem('water-goal', val);
+  renderWater();
+}
+
+function getWaterGoal() {
+  return parseInt(localStorage.getItem('water-goal')) || 64;
+}
+
+function renderWater() {
+  const log   = getWaterLog();
+  const goal  = getWaterGoal();
+  const total = log.reduce((s, e) => s + e.oz, 0);
+  const pct   = Math.min(100, Math.round((total / goal) * 100));
+  const met   = pct >= 100;
+
+  // Sync goal input to saved value
+  const goalInput = document.getElementById('water-goal-input');
+  if (goalInput && !goalInput.matches(':focus')) goalInput.value = goal;
+
+  document.getElementById('water-today').textContent        = total;
+  document.getElementById('water-goal-display').textContent = goal;
+  document.getElementById('water-bar').style.width          = pct + '%';
+  document.getElementById('water-bar').style.background     = met ? 'var(--green)' : 'var(--blue)';
+  document.getElementById('water-pct-badge').textContent    = pct + '%';
+  document.getElementById('water-pct-badge').style.color    = met ? 'var(--green)' : 'var(--blue)';
+  document.getElementById('water-today').style.color        = met ? 'var(--green)' : 'var(--blue)';
+
+  const logEl = document.getElementById('water-log');
+  if (!log.length) {
+    logEl.innerHTML = '<div style="font-size:11px;color:var(--text-4);text-align:center;padding:0.5rem 0">No entries today — stay hydrated! 💧</div>';
+    return;
+  }
+  logEl.innerHTML = [...log].reverse().map(e => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.3rem 0;border-bottom:1px solid var(--border);font-size:11px">
+      <span style="color:var(--blue);font-weight:600">💧 ${e.oz}oz</span>
+      <span style="color:var(--text-4)">${e.time}</span>
+      <button class="btn btn-danger btn-sm" style="padding:1px 5px;font-size:10px" onclick="removeWaterEntry('${e.id}')">✕</button>
+    </div>`).join('');
+}
+
+
+
+// ═══════════════════ CONTEXT MENU ═══════════════════
+
+const CTX = { action: null, deleteAction: null };
+
+function openCtx(e, editFn, deleteFn) {
+  e.stopPropagation();
+  const menu = document.getElementById('ctx-menu');
+  CTX.editFn   = editFn;
+  CTX.deleteFn = deleteFn;
+  // Hide edit option if no edit function provided
+  document.getElementById('ctx-edit').style.display = editFn ? 'flex' : 'none';
+  document.getElementById('ctx-divider') && (document.getElementById('ctx-divider').style.display = editFn ? 'block' : 'none');
+  menu.classList.add('open');
+  // Position near the button
+  const rect = e.currentTarget.getBoundingClientRect();
+  const menuW = 150, menuH = 90;
+  let left = rect.right - menuW;
+  let top  = rect.bottom + 4;
+  if (left < 8) left = 8;
+  if (top + menuH > window.innerHeight - 8) top = rect.top - menuH - 4;
+  menu.style.left = left + 'px';
+  menu.style.top  = top  + 'px';
+}
+
+function ctxEdit()   { closeCtxMenu(); if (CTX.editFn)   CTX.editFn(); }
+function ctxDelete() { closeCtxMenu(); if (CTX.deleteFn) CTX.deleteFn(); }
+function closeCtxMenu() { document.getElementById('ctx-menu').classList.remove('open'); }
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#ctx-menu') && !e.target.closest('.ctx-btn')) closeCtxMenu();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCtxMenu(); });
+
+// ── EDIT MODAL HELPERS ────────────────────────────────────
+
+function openEditModal(modalId, title, submitLabel, submitFn) {
+  // Swap modal into edit mode
+  const modal = document.getElementById(modalId);
+  const titleEl = modal.querySelector('.modal-title');
+  const submitBtn = modal.querySelector('.btn-primary');
+  if (titleEl) titleEl.textContent = title;
+  if (submitBtn) {
+    submitBtn.textContent = submitLabel;
+    submitBtn._editFn = submitFn;
+    submitBtn.onclick = () => submitBtn._editFn();
+  }
+  openModal(modalId);
+}
+
+function resetModalToAdd(modalId, title, submitLabel, submitFn) {
+  const modal = document.getElementById(modalId);
+  const titleEl = modal.querySelector('.modal-title');
+  const submitBtn = modal.querySelector('.btn-primary');
+  if (titleEl) titleEl.textContent = title;
+  if (submitBtn) { submitBtn.textContent = submitLabel; submitBtn.onclick = submitFn; }
+}
+
+// ── EXPENSE EDIT ──────────────────────────────────────────
+
+function editExpense(id) {
+  const e = state.expenses.find(x => x.id === id);
+  if (!e) return;
+  document.getElementById('e-desc').value   = e.desc;
+  document.getElementById('e-amount').value = e.amount;
+  document.getElementById('e-cat').value    = e.cat || '';
+  document.getElementById('e-date').value   = e.date;
+  document.getElementById('e-card').value   = e.card || '';
+  openEditModal('modal-add-expense', 'Edit Expense', 'Save Changes', () => {
+    e.desc   = document.getElementById('e-desc').value.trim()   || e.desc;
+    e.amount = parseFloat(document.getElementById('e-amount').value) || e.amount;
+    e.cat    = document.getElementById('e-cat').value;
+    e.date   = document.getElementById('e-date').value || e.date;
+    e.card   = document.getElementById('e-card').value;
+    closeModal('modal-add-expense');
+    resetModalToAdd('modal-add-expense', 'Add Expense', 'Add Expense', addExpense);
+    renderExpenses(); renderBudgets(); updateSummary(); renderCards();
+    autoSave();
+  });
+}
+
+// ── INCOME EDIT ───────────────────────────────────────────
+
+function editIncome(id) {
+  const item = state.income.find(x => x.id === id);
+  if (!item) return;
+  document.getElementById('i-name').value   = item.name;
+  document.getElementById('i-amount').value = item.amount;
+  document.getElementById('i-date').value   = item.date;
+  document.getElementById('i-type').value   = item.type;
+  document.getElementById('i-notes').value  = item.notes || '';
+  openEditModal('modal-add-income', 'Edit Income', 'Save Changes', () => {
+    item.name   = document.getElementById('i-name').value.trim()   || item.name;
+    item.amount = parseFloat(document.getElementById('i-amount').value) || item.amount;
+    item.date   = document.getElementById('i-date').value || item.date;
+    item.type   = document.getElementById('i-type').value;
+    item.notes  = document.getElementById('i-notes').value;
+    closeModal('modal-add-income');
+    resetModalToAdd('modal-add-income', 'Log Income', 'Add Income', addIncome);
+    renderIncome(); updateSummary(); autoSave();
+  });
+}
+
+// ── BILL EDIT ─────────────────────────────────────────────
+
+function editBill(id) {
+  const b = state.bills.find(x => x.id === id);
+  if (!b) return;
+  document.getElementById('bill-name').value   = b.name;
+  document.getElementById('bill-amount').value = b.amount;
+  document.getElementById('bill-day').value    = b.day;
+  document.getElementById('bill-cat').value    = b.cat;
+  document.getElementById('bill-recur').value  = b.recur;
+  document.getElementById('bill-card').value   = b.card || '';
+  // Set autopay toggle
+  document.getElementById('bill-autopay').value = b.autoPay ? '1' : '0';
+  const t = document.getElementById('bill-autopay-toggle');
+  const k = document.getElementById('bill-autopay-knob');
+  if (t) t.style.background = b.autoPay ? 'var(--blue)' : 'var(--surface3)';
+  if (k) k.style.transform  = b.autoPay ? 'translateX(18px)' : 'translateX(0)';
+  openEditModal('modal-add-bill', 'Edit Bill', 'Save Changes', () => {
+    b.name    = document.getElementById('bill-name').value.trim()   || b.name;
+    b.amount  = parseFloat(document.getElementById('bill-amount').value) || b.amount;
+    b.day     = parseInt(document.getElementById('bill-day').value)  || b.day;
+    b.cat     = document.getElementById('bill-cat').value;
+    b.recur   = document.getElementById('bill-recur').value;
+    b.card    = document.getElementById('bill-card').value;
+    b.autoPay = document.getElementById('bill-autopay').value === '1';
+    closeModal('modal-add-bill');
+    resetModalToAdd('modal-add-bill', 'Add Bill', 'Add Bill', addBill);
+    syncBillToCalendar(b);
+    renderBills(); renderBudgets(); updateSummary(); autoSave();
+  });
+}
+
+// ── SAVINGS EDIT ──────────────────────────────────────────
+
+function editSaving(id) {
+  const s = state.savings.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('s-name').value    = s.name;
+  document.getElementById('s-target').value  = s.target;
+  document.getElementById('s-current').value = s.current;
+  document.getElementById('s-date').value    = s.date || '';
+  openEditModal('modal-add-saving', 'Edit Savings Goal', 'Save Changes', () => {
+    s.name    = document.getElementById('s-name').value.trim()    || s.name;
+    s.target  = parseFloat(document.getElementById('s-target').value)  || s.target;
+    s.current = parseFloat(document.getElementById('s-current').value) || 0;
+    s.date    = document.getElementById('s-date').value;
+    closeModal('modal-add-saving');
+    resetModalToAdd('modal-add-saving', 'Add Savings Goal', 'Add Goal', addSaving);
+    renderSavings(); updateSummary(); autoSave();
+  });
+}
+
+// ── DEBT EDIT ─────────────────────────────────────────────
+
+function editDebt(id) {
+  const d = state.debts.find(x => x.id === id);
+  if (!d) return;
+  document.getElementById('d-name').value      = d.name;
+  document.getElementById('d-total').value     = d.total;
+  document.getElementById('d-remaining').value = d.remaining;
+  document.getElementById('d-rate').value      = d.rate;
+  document.getElementById('d-type').value      = d.type;
+  openEditModal('modal-add-debt', 'Edit Debt', 'Save Changes', () => {
+    d.name      = document.getElementById('d-name').value.trim()      || d.name;
+    d.total     = parseFloat(document.getElementById('d-total').value)     || d.total;
+    d.remaining = parseFloat(document.getElementById('d-remaining').value) || d.remaining;
+    d.rate      = parseFloat(document.getElementById('d-rate').value)      || 0;
+    d.type      = document.getElementById('d-type').value;
+    closeModal('modal-add-debt');
+    resetModalToAdd('modal-add-debt', 'Add Debt', 'Add Debt', addDebt);
+    renderDebts(); updateSummary(); autoSave();
+  });
+}
+
+// ── ASSET EDIT ────────────────────────────────────────────
+
+function editAsset(id) {
+  const a = state.assets.find(x => x.id === id);
+  if (!a) return;
+  document.getElementById('a-name').value  = a.name;
+  document.getElementById('a-type').value  = a.type;
+  document.getElementById('a-value').value = a.value;
+  document.getElementById('a-notes').value = a.notes || '';
+  openEditModal('modal-add-asset', 'Edit Asset', 'Save Changes', () => {
+    a.name  = document.getElementById('a-name').value.trim()  || a.name;
+    a.type  = document.getElementById('a-type').value;
+    a.value = parseFloat(document.getElementById('a-value').value) || a.value;
+    a.notes = document.getElementById('a-notes').value;
+    closeModal('modal-add-asset');
+    resetModalToAdd('modal-add-asset', 'Add Asset', 'Add Asset', addAsset);
+    renderAssets(); updateSummary(); autoSave();
+  });
+}
+
+// ── EVENT EDIT ────────────────────────────────────────────
+
+function editEvent(id) {
+  const ev = state.events.find(x => x.id === id);
+  if (!ev || ev.billId) return; // don't edit bill-generated events
+  document.getElementById('ev-title').value = ev.title;
+  document.getElementById('ev-date').value  = ev.date;
+  document.getElementById('ev-time').value  = ev.time || '';
+  document.getElementById('ev-cat').value   = ev.cat  || 'blue';
+  document.getElementById('ev-notes').value = ev.notes || '';
+  openEditModal('modal-add-event', 'Edit Event', 'Save Changes', () => {
+    ev.title = document.getElementById('ev-title').value.trim() || ev.title;
+    ev.date  = document.getElementById('ev-date').value  || ev.date;
+    ev.time  = document.getElementById('ev-time').value;
+    ev.cat   = document.getElementById('ev-cat').value;
+    ev.notes = document.getElementById('ev-notes').value;
+    closeModal('modal-add-event');
+    resetModalToAdd('modal-add-event', 'Add Event', 'Add Event', addEvent);
+    renderEvents(); renderCalendar(); autoSave();
+  });
+}
+
+// ── WORKOUT EDIT ──────────────────────────────────────────
+
+function editWorkout(id) {
+  const w = state.workouts.find(x => x.id === id);
+  if (!w) return;
+  document.getElementById('w-name').value     = w.name;
+  document.getElementById('w-type').value     = w.type;
+  document.getElementById('w-duration').value = w.duration;
+  document.getElementById('w-volume').value   = w.volume || '';
+  document.getElementById('w-date').value     = w.date;
+  document.getElementById('w-notes').value    = w.notes || '';
+  openEditModal('modal-add-workout', 'Edit Workout', 'Save Changes', () => {
+    w.name     = document.getElementById('w-name').value.trim()     || w.name;
+    w.type     = document.getElementById('w-type').value;
+    w.duration = parseInt(document.getElementById('w-duration').value) || w.duration;
+    w.volume   = document.getElementById('w-volume').value;
+    w.date     = document.getElementById('w-date').value || w.date;
+    w.notes    = document.getElementById('w-notes').value;
+    closeModal('modal-add-workout');
+    resetModalToAdd('modal-add-workout', 'Log Workout', 'Log Workout', addWorkout);
+    renderWorkouts(); updateHealthSummary(); autoSave();
+  });
+}
+
+// ── FOOD EDIT ─────────────────────────────────────────────
+
+function editFood(id) {
+  const f = state.foods.find(x => x.id === id);
+  if (!f) return;
+  document.getElementById('f-name').value    = f.name;
+  document.getElementById('f-meal').value    = f.meal;
+  document.getElementById('f-cal').value     = f.cal;
+  document.getElementById('f-protein').value = f.protein;
+  document.getElementById('f-carbs').value   = f.carbs;
+  document.getElementById('f-fats').value    = f.fats;
+  openEditModal('modal-add-meal', 'Edit Food', 'Save Changes', () => {
+    f.name    = document.getElementById('f-name').value.trim()    || f.name;
+    f.meal    = document.getElementById('f-meal').value;
+    f.cal     = parseInt(document.getElementById('f-cal').value)     || 0;
+    f.protein = parseInt(document.getElementById('f-protein').value) || 0;
+    f.carbs   = parseInt(document.getElementById('f-carbs').value)   || 0;
+    f.fats    = parseInt(document.getElementById('f-fats').value)    || 0;
+    closeModal('modal-add-meal');
+    resetModalToAdd('modal-add-meal', 'Log Food', 'Log Food', addFood);
+    renderFoods(); renderMealSlots(); updateNutritionSummary(); autoSave();
+  });
+}
+
+// ── CARD EDIT ─────────────────────────────────────────────
+
+function editCard(id) {
+  const c = state.cards.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('card-name').value   = c.name;
+  document.getElementById('card-points').value = c.points || '';
+  document.getElementById('card-color').value  = c.color;
+  openEditModal('modal-add-card', 'Edit Card', 'Save Changes', () => {
+    c.name   = document.getElementById('card-name').value.trim()   || c.name;
+    c.points = document.getElementById('card-points').value;
+    c.color  = document.getElementById('card-color').value;
+    closeModal('modal-add-card');
+    resetModalToAdd('modal-add-card', 'Add Credit Card', 'Add Card', addCard);
+    renderCards(); updateCardSelects(); autoSave();
+  });
+}
+
+// ── BUDGET EDIT ───────────────────────────────────────────
+
+function editBudget(id) {
+  const b = state.budgets.find(x => x.id === id);
+  if (!b) return;
+  document.getElementById('budget-name').value  = b.name;
+  document.getElementById('budget-limit').value = b.limit;
+  document.getElementById('budget-color').value = b.color;
+  openEditModal('modal-add-budget', 'Edit Budget', 'Save Changes', () => {
+    b.name  = document.getElementById('budget-name').value.trim()  || b.name;
+    b.limit = parseFloat(document.getElementById('budget-limit').value) || b.limit;
+    b.color = document.getElementById('budget-color').value;
+    closeModal('modal-add-budget');
+    resetModalToAdd('modal-add-budget', 'Add Budget Category', 'Add Category', addBudget);
+    renderBudgets(); updateExpenseCategorySelect(); updateSummary(); autoSave();
+  });
+}
+
+function autoSave() {
+  saveStateLocal();
+  if (typeof firebaseQueueSave === 'function') firebaseQueueSave();
+}
 
 function removeItem(arr, id, ...callbacks) {
   state[arr] = state[arr].filter(x => x.id !== id);
@@ -3050,17 +3737,21 @@ function renderYearOverview() {
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const monthData = MONTHS.map((name, m) => {
     const key = `${yr}-${String(m+1).padStart(2,'0')}`;
-    const income   = state.income.filter(i => i.date.startsWith(key)).reduce((s,i) => s + i.amount, 0);
-    const expenses = state.expenses.filter(e => e.date.startsWith(key)).reduce((s,e) => s + e.amount, 0);
-    const bills    = state.bills.filter(b => b.paidMonths.some(p => p === key)).reduce((s,b) => s + b.amount, 0);
-    return { name, key, income, expenses, bills };
+    const income    = state.income.filter(i => i.date.startsWith(key)).reduce((s,i) => s + i.amount, 0);
+    // Manual expenses only — bill-logged expenses are tracked via paidMonths to avoid double-counting
+    const expenses  = state.expenses.filter(e => e.date.startsWith(key) && !e.fromBill).reduce((s,e) => s + e.amount, 0);
+    // Bills paid this month (from paidMonths — the source of truth)
+    const bills     = state.bills.filter(b => b.paidMonths.includes(key)).reduce((s,b) => s + b.amount, 0);
+    const totalSpent = expenses + bills;
+    return { name, key, income, expenses, bills, totalSpent };
   });
 
   // Annual totals
-  const totalIncome  = monthData.reduce((s,m) => s + m.income, 0);
-  const totalSpent   = monthData.reduce((s,m) => s + m.expenses, 0);
-  const totalBills   = monthData.reduce((s,m) => s + m.bills, 0);
-  const surplus      = totalIncome - totalSpent;
+  const totalIncome   = monthData.reduce((s,m) => s + m.income, 0);
+  const totalExpenses = monthData.reduce((s,m) => s + m.expenses, 0);
+  const totalBills    = monthData.reduce((s,m) => s + m.bills, 0);
+  const totalSpent    = totalExpenses + totalBills;
+  const surplus       = totalIncome - totalSpent;
   document.getElementById('year-income').textContent  = fmt(totalIncome);
   document.getElementById('year-spent').textContent   = fmt(totalSpent);
   document.getElementById('year-surplus').textContent = fmt(Math.abs(surplus));
@@ -3080,7 +3771,7 @@ function renderYearOverview() {
 
   ctx.clearRect(0, 0, W, H);
 
-  const maxVal = Math.max(...monthData.flatMap(m => [m.income, m.expenses]), 1);
+  const maxVal = Math.max(...monthData.flatMap(m => [m.income, m.totalSpent]), 1);
   const step = chartW / 11; // 12 points, 11 intervals
 
   // Helper: get x/y for a data point
@@ -3144,17 +3835,17 @@ function renderYearOverview() {
   drawSmooth(incPts, 'rgba(52,199,89,0.9)', 'rgba(52,199,89,0.18)', 'rgba(52,199,89,0.01)');
 
   // Expense area (draw on top)
-  const expPts = monthData.map((m,i) => ({ x: px(i), y: py(m.expenses) }));
+  const expPts = monthData.map((m,i) => ({ x: px(i), y: py(m.totalSpent) }));
   drawSmooth(expPts, 'rgba(255,59,48,0.85)', 'rgba(255,59,48,0.14)', 'rgba(255,59,48,0.01)');
 
   // Running balance line (no fill)
   let bal = 0;
-  const minB = monthData.reduce((acc, m) => { bal += m.income - m.expenses; return Math.min(acc, bal); }, 0);
-  const maxB = monthData.reduce((acc, m, i) => { return Math.max(acc, monthData.slice(0,i+1).reduce((s,mm) => s + mm.income - mm.expenses, 0)); }, 0);
+  const minB = monthData.reduce((acc, m) => { bal += m.income - m.totalSpent; return Math.min(acc, bal); }, 0);
+  const maxB = monthData.reduce((acc, m, i) => { return Math.max(acc, monthData.slice(0,i+1).reduce((s,mm) => s + mm.income - mm.totalSpent, 0)); }, 0);
   const rangeB = Math.max(maxB - minB, 1);
   bal = 0;
   const balPts = monthData.map((m, i) => {
-    bal += m.income - m.expenses;
+    bal += m.income - m.totalSpent;
     const y = PAD.top + chartH - ((bal - minB) / rangeB) * chartH * 0.72 - chartH * 0.1;
     return { x: px(i), y };
   });
@@ -3241,23 +3932,24 @@ function renderYearOverview() {
   let runBalance = 0;
   const now = new Date();
   document.getElementById('year-month-body').innerHTML = monthData.map(m => {
-    runBalance += m.income - m.expenses;
-    const net = m.income - m.expenses;
+    runBalance += m.income - m.totalSpent;
+    const net = m.income - m.totalSpent;
     const savRate = m.income > 0 ? Math.round((net / m.income) * 100) : null;
     const isFuture = `${yr}-${String(MONTHS.indexOf(m.name)+1).padStart(2,'0')}` > `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
     const rowStyle = isFuture ? 'opacity:0.4' : '';
+    const hasActivity = m.income > 0 || m.totalSpent > 0;
     return `<tr style="${rowStyle}">
       <td style="font-weight:600">${m.name}</td>
       <td style="color:var(--green);font-weight:500">${m.income > 0 ? fmt(m.income) : '—'}</td>
       <td style="color:var(--red);font-weight:500">${m.expenses > 0 ? fmt(m.expenses) : '—'}</td>
       <td style="color:var(--text-3)">${m.bills > 0 ? fmt(m.bills) : '—'}</td>
-      <td style="font-weight:600;color:${net >= 0 ? 'var(--green)' : 'var(--red)'}">${m.income > 0 || m.expenses > 0 ? fmt(net) : '—'}</td>
+      <td style="font-weight:600;color:${net >= 0 ? 'var(--green)' : 'var(--red)'}">${hasActivity ? fmt(net) : '—'}</td>
       <td>${savRate !== null ? `<span class="tag ${savRate >= 20 ? 'tag-green' : savRate >= 0 ? 'tag-blue' : 'tag-red'}">${savRate}%</span>` : '—'}</td>
     </tr>`;
   }).join('') + `<tr style="border-top:2px solid var(--border-mid);font-weight:700">
     <td>Total</td>
     <td style="color:var(--green)">${fmt(totalIncome)}</td>
-    <td style="color:var(--red)">${fmt(totalSpent)}</td>
+    <td style="color:var(--red)">${fmt(totalExpenses)}</td>
     <td style="color:var(--text-3)">${fmt(totalBills)}</td>
     <td style="color:${surplus>=0?'var(--green)':'var(--red)'}">${fmt(surplus)}</td>
     <td>${totalIncome > 0 ? `<span class="tag ${surplus/totalIncome >= 0.2 ? 'tag-green' : surplus >= 0 ? 'tag-blue' : 'tag-red'}">${Math.round((surplus/totalIncome)*100)}%</span>` : '—'}</td>
@@ -3526,7 +4218,14 @@ async function firebaseLoadNow() {
       refreshAllViews();
       setSyncStatus('saved', '✓ Synced');
     } else {
-      setSyncStatus('saved', '✓ Ready');
+      // No cloud data yet — seed from localStorage if available
+      const hadLocal = loadStateLocal();
+      if (hadLocal) {
+        refreshAllViews();
+        setSyncStatus('saved', '✓ Ready (local data loaded)');
+      } else {
+        setSyncStatus('saved', '✓ Ready');
+      }
     }
   } catch(e) {
     setSyncStatus('error', '✕ Load failed');
@@ -3554,7 +4253,7 @@ function refreshAllViews() {
 function patchForSync(fnName) {
   const orig = window[fnName];
   if (typeof orig !== 'function') return;
-  window[fnName] = function(...args) { orig.apply(this, args); firebaseQueueSave(); };
+  window[fnName] = function(...args) { orig.apply(this, args); saveStateLocal(); firebaseQueueSave(); };
 }
 ['addBudgetCategory','addExpense','addSaving','updateSaving','addDebt','makePayment',
  'addAsset','updateAsset','addIncome','addBill','markBillPaid','removeBill',
@@ -3570,16 +4269,37 @@ const FIREBASE_CONFIG = {
   appId: "1:363693911960:web:47c0d5315789db272a05ed"
 };
 
+const LS_STATE_KEY = 'dashboard-state-v1';
+
+function saveStateLocal() {
+  try {
+    localStorage.setItem(LS_STATE_KEY, JSON.stringify(state));
+  } catch(e) { console.error('Local save failed', e); }
+}
+
+function loadStateLocal() {
+  try {
+    const raw = localStorage.getItem(LS_STATE_KEY);
+    if (!raw) return false;
+    const saved = JSON.parse(raw);
+    // Merge saved arrays into state
+    ['expenses','income','bills','budgets','savings','debts','assets','events','workouts','foods','cards'].forEach(k => {
+      if (Array.isArray(saved[k])) state[k] = saved[k];
+    });
+    return true;
+  } catch(e) { console.error('Local load failed', e); return false; }
+}
+
 async function autoConnectFirebase() {
-  const cfg = FIREBASE_CONFIG;
   FB.autosave = localStorage.getItem(LS_AUTOSAVE_KEY) !== '0';
   setSyncStatus('loading', '… Connecting');
   try {
-    await initFirebase(cfg);
+    await initFirebase(FIREBASE_CONFIG);
+    // onAuthStateChanged inside initFirebase will call showAppScreen or showAuthScreen
   } catch(e) {
+    console.error('Firebase init error:', e);
     setSyncStatus('error', '✕ Connection failed');
     showAuthScreen();
-    console.error('Firebase init error:', e);
   }
 }
 
@@ -3588,6 +4308,7 @@ renderCalendar();
 renderMealSlots();
 renderCards();
 updateCardSelects();
+renderWater();
 updateFinanceMonthLabel();
 document.getElementById('e-date').value = today();
 document.getElementById('ev-date').value = today();
