@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Dashboard</title>
 <meta name="description" content="Personal finance, health and life tracker">
 <meta name="theme-color" content="#4f46e5">
@@ -259,6 +259,164 @@ main {
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
 @media (max-width: 900px) { .grid-3, .grid-2, .grid-1-2 { grid-template-columns: 1fr; } }
 @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ═══════════════════════════════════════════
+   MOBILE — comprehensive responsive overrides
+   ═══════════════════════════════════════════ */
+
+/* Tablet (≤768px) — collapse multi-col layouts earlier */
+@media (max-width: 768px) {
+  .grid-3, .grid-2, .grid-1-2 { grid-template-columns: 1fr; }
+  .two-col { grid-template-columns: 1fr 1fr; }
+
+  .stat-value { font-size: 26px; }
+
+  /* Tighter card padding */
+  .card { padding: 1rem; }
+
+  /* Table: hide less critical columns */
+  .table-col-hide-tablet { display: none; }
+
+  main { max-width: 100%; }
+}
+
+/* Mobile (≤480px) — full mobile layout */
+@media (max-width: 480px) {
+
+  /* ── NAV: collapse to logo + icons only, tabs move to bottom ── */
+  nav {
+    height: 52px;
+    padding: 0 1rem;
+    justify-content: space-between;
+  }
+  .nav-tabs { display: none; } /* replaced by bottom tab bar */
+  .nav-logo { font-size: 14px; }
+  .user-chip { display: none; }
+  .sync-pill { font-size: 10px; padding: 0.15rem 0.5rem; }
+
+  /* ── BOTTOM TAB BAR ── */
+  #bottom-tab-bar {
+    display: flex !important;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 100;
+    background: var(--surface);
+    border-top: 1px solid var(--border-mid);
+    height: 58px;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+  }
+  .bottom-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: var(--text-4);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    transition: color 0.15s;
+    padding: 0.4rem 0;
+  }
+  .bottom-tab.active { color: var(--accent); }
+  .bottom-tab-icon {
+    font-size: 18px;
+    line-height: 1;
+    transition: transform 0.15s;
+  }
+  .bottom-tab.active .bottom-tab-icon { transform: scale(1.12); }
+
+  /* ── MAIN: extra bottom padding for tab bar ── */
+  main { padding-bottom: 70px; }
+
+  /* ── PAGES ── */
+  .page { padding: 1.25rem 0.875rem; }
+
+  /* ── PAGE HEADER: stack month picker below title ── */
+  .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.65rem !important;
+  }
+  .page-header h1 { font-size: 20px; }
+
+  /* ── GRIDS: always single column ── */
+  .grid-3, .grid-2, .grid-1-2, .two-col {
+    grid-template-columns: 1fr;
+  }
+
+  /* ── CARDS ── */
+  .card { padding: 0.875rem; border-radius: var(--radius-md); }
+  .card::before { display: none; } /* no left accent on mobile */
+  .stat-value { font-size: 24px; }
+
+  /* ── TABLES: horizontal scroll + condensed ── */
+  .table-wrap { margin: 0 -0.875rem; padding: 0 0.875rem; }
+  td, th { padding: 0.5rem 0.5rem; font-size: 11px; }
+  th { font-size: 9px; }
+
+  /* Hide non-critical table columns on mobile */
+  .table-col-hide { display: none !important; }
+
+  /* ── MODALS: full bottom sheet ── */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal {
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    max-height: 92vh;
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  }
+
+  /* ── CARD TITLE: wrap action buttons ── */
+  .card-title { flex-wrap: wrap; gap: 0.4rem; }
+
+  /* ── MACRO BAR: tighter ── */
+  .macro-pill { padding: 0.5rem; }
+  .macro-pill .val { font-size: 15px; }
+
+  /* ── CALENDAR ── */
+  .cal-cell { font-size: 11px; }
+
+  /* ── HERO STAT CARDS: tighter ── */
+  .hero-card, .blue-card, .green-card { padding: 0.875rem; }
+
+  /* ── BILLS TABLE: show only essential columns ── */
+  #bills-body td:nth-child(4),
+  #bills-body td:nth-child(5),
+  #bills-body th:nth-child(4),
+  #bills-body th:nth-child(5) { display: none; }
+
+  /* ── EXPENSE TABLE: hide notes/date column ── */
+  #expense-body td:nth-child(1),
+  #expense-body th:nth-child(1) { display: none; }
+
+  /* ── INCOME TABLE ── */
+  #income-body td:nth-child(5),
+  #income-body th:nth-child(5) { display: none; }
+
+  /* ── ASSET TABLE ── */
+  #asset-body td:nth-child(4),
+  #asset-body th:nth-child(4) { display: none; }
+
+  /* ── YEAR CHART: shorter canvas ── */
+  #year-bar-chart { height: 160px !important; }
+}
+
+/* Very small phones */
+@media (max-width: 360px) {
+  .nav-icon-btn { width: 26px; height: 26px; font-size: 12px; }
+  .stat-value { font-size: 20px; }
+  .bottom-tab-icon { font-size: 16px; }
+  .bottom-tab { font-size: 9px; }
+}
 
 /* ── CARDS ───────────────────────────────────── */
 .card {
@@ -1799,6 +1957,25 @@ tr:hover td { background: var(--surface2); }
 <!-- TOAST -->
 <div class="loot-toast" id="loot-toast"></div>
 
+<!-- BOTTOM TAB BAR (mobile only, shown via CSS) -->
+<div id="bottom-tab-bar" style="display:none">
+  <button class="bottom-tab active" id="btab-finance" onclick="showPage('finance',null);setBottomTab('finance')">
+    <span class="bottom-tab-icon">💰</span>Finance
+  </button>
+  <button class="bottom-tab" id="btab-year" onclick="showPage('year',null);setBottomTab('year')">
+    <span class="bottom-tab-icon">📈</span>Year
+  </button>
+  <button class="bottom-tab" id="btab-calendar" onclick="showPage('calendar',null);setBottomTab('calendar')">
+    <span class="bottom-tab-icon">📅</span>Calendar
+  </button>
+  <button class="bottom-tab" id="btab-health" onclick="showPage('health',null);setBottomTab('health')">
+    <span class="bottom-tab-icon">🏋️</span>Health
+  </button>
+  <button class="bottom-tab" id="btab-meals" onclick="showPage('meals',null);setBottomTab('meals')">
+    <span class="bottom-tab-icon">🥗</span>Meals
+  </button>
+</div>
+
 </div> <!-- end app-wrapper -->
 
 <script>
@@ -1860,11 +2037,18 @@ function shiftYear(dir) {
 }
 
 // ═══════════════════ NAVIGATION ═══════════════════
+function setBottomTab(id) {
+  document.querySelectorAll('.bottom-tab').forEach(t => t.classList.remove('active'));
+  const el = document.getElementById('btab-' + id);
+  if (el) el.classList.add('active');
+}
+
 function showPage(id, tabEl) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
   if (tabEl) tabEl.classList.add('active');
+  setBottomTab(id);
   if (id === 'calendar') renderCalendar();
   if (id === 'year') renderYearOverview();
 }
@@ -1931,7 +2115,10 @@ function renderBudgets() {
       </div>` : '';
     return `<div class="progress-wrap">
       <div class="progress-label">
-        <span>${b.name}</span>
+        <span style="display:flex;align-items:center;gap:0.5rem">
+          ${b.name}
+          <button class="btn btn-danger btn-sm" style="padding:1px 6px;font-size:10px;line-height:1.4" onclick="removeItem('budgets','${b.id}',renderBudgets,updateExpenseCategorySelect,updateSummary)">✕</button>
+        </span>
         <span class="${overBudget ? 'red' : 'muted'}">${fmt(totalSpent)} / ${fmt(b.limit)}</span>
       </div>
       <div class="progress-bar" style="position:relative">
@@ -2872,7 +3059,7 @@ function renderYearOverview() {
   const canvas = document.getElementById('year-bar-chart');
   const parent = canvas.parentElement;
   canvas.width  = parent.offsetWidth  || 600;
-  canvas.height = parent.offsetHeight || 220;
+  canvas.height = window.innerWidth <= 480 ? 160 : (parent.offsetHeight || 220);
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   const PAD = { top: 24, right: 20, bottom: 36, left: 58 };
