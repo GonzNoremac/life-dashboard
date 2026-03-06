@@ -2702,7 +2702,16 @@ function updateSummary() {
   const ms = financeMonthStr();
   const totalBudget = state.budgets.reduce((s,x) => s + x.limit, 0);
   const thisMonthIncome = state.income.filter(i => i.date.startsWith(ms)).reduce((s,i) => s + i.amount, 0);
+
+  // All expenses this month (for display)
   const thisMonthSpent = state.expenses.filter(e => e.date.startsWith(ms)).reduce((s,e) => s + e.amount, 0);
+
+  // Regular expenses only (exclude bill-logged) — used for budget remaining calc
+  const thisMonthRegularSpent = state.expenses.filter(e => e.date.startsWith(ms) && !e.fromBill).reduce((s,e) => s + e.amount, 0);
+
+  // Bills paid this month (tracked separately)
+  const thisMonthBillsPaid = state.bills.filter(b => b.paidMonths.includes(ms)).reduce((s,b) => s + b.amount, 0);
+
   const totalBillsMonthly = state.bills.reduce((s,b) => {
     const factor = b.recur === 'Monthly' ? 1 : b.recur === 'Bi-monthly' ? 0.5 : b.recur === 'Quarterly' ? 1/3 : 1/12;
     return s + b.amount * factor;
@@ -2710,11 +2719,13 @@ function updateSummary() {
 
   let remaining, remainingLabel;
   if (thisMonthIncome > 0) {
+    // Income mode: income minus everything (regular + bills)
     remaining = thisMonthIncome - thisMonthSpent;
     remainingLabel = 'Remaining (income − spent)';
   } else if (totalBudget > 0) {
-    remaining = totalBudget - thisMonthSpent;
-    remainingLabel = 'Remaining (budget − spent)';
+    // Budget mode: only count regular expenses against budget, bills are separate
+    remaining = totalBudget - thisMonthRegularSpent;
+    remainingLabel = 'Remaining (budget − expenses)';
   } else {
     remaining = 0;
     remainingLabel = 'Log income or set a budget';
@@ -2724,10 +2735,11 @@ function updateSummary() {
   document.getElementById('budget-remaining').className = 'stat-value ' + (remaining >= 0 ? '' : 'red');
   document.getElementById('budget-remaining-label').textContent = remainingLabel;
   document.getElementById('summary-income-label').textContent = `Income: ${fmt(thisMonthIncome)}`;
-  document.getElementById('summary-expense-label').textContent = `Spent: ${fmt(thisMonthSpent)}`;
+  document.getElementById('summary-expense-label').textContent = `Spent: ${fmt(thisMonthRegularSpent)}${thisMonthBillsPaid > 0 ? ` + ${fmt(thisMonthBillsPaid)} bills` : ''}`;
 
   const base = thisMonthIncome > 0 ? thisMonthIncome : totalBudget;
-  const pct = base > 0 ? Math.min(100, (thisMonthSpent / base) * 100) : (totalBillsMonthly > 0 ? 50 : 0);
+  const spentForBar = thisMonthIncome > 0 ? thisMonthSpent : thisMonthRegularSpent;
+  const pct = base > 0 ? Math.min(100, (spentForBar / base) * 100) : (totalBillsMonthly > 0 ? 50 : 0);
   document.getElementById('budget-bar').style.width = pct + '%';
   document.getElementById('budget-bar').className = 'progress-fill ' + (pct > 90 ? 'fill-red' : pct > 70 ? 'fill-yellow' : 'fill-accent');
 
