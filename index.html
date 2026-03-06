@@ -3,547 +3,534 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chronicle of the Evergrind</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<title>Dashboard</title>
+<meta name="description" content="Personal finance, health and life tracker">
+<meta name="theme-color" content="#4f46e5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+  #loading-screen {
+    position: fixed; inset: 0; z-index: 999;
+    background: #f4f4f6;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 1rem;
+    transition: opacity 0.3s ease;
+    font-family: 'DM Sans', sans-serif;
+  }
+  [data-theme="dark"] #loading-screen { background: #0f0f11; }
+  #loading-screen.fade-out { opacity: 0; pointer-events: none; }
+  .loading-logo { font-size: 20px; font-weight: 700; letter-spacing: -0.4px; color: #111118; }
+  [data-theme="dark"] .loading-logo { color: #f0f0f5; }
+  .loading-logo span { color: #4f46e5; }
+  .loading-spinner {
+    width: 28px; height: 28px;
+    border: 2.5px solid rgba(79,70,229,0.15);
+    border-top-color: #4f46e5;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── DESIGN TOKENS ───────────────────────────── */
 :root {
-  --bg: #08070a;
-  --bg2: #0d0b10;
-  --surface: #111019;
-  --surface2: #17151f;
-  --surface3: #1f1c2a;
-  --border: #2e2840;
-  --border-gold: #7a5c1e;
-  --border-bright: #c8971a;
-  --text: #e8dfc0;
-  --text-muted: #8a7a5a;
-  --text-dim: #4a3f2a;
-  --gold: #f0b429;
-  --gold-dim: #7a5c1e;
-  --gold-glow: rgba(240,180,41,0.12);
-  --gold-glow-strong: rgba(240,180,41,0.25);
-  --green: #4ade80;
-  --green-dim: #14381e;
-  --red: #f87171;
-  --red-dim: #3d1414;
-  --blue: #60a5fa;
-  --blue-dim: #0f2040;
-  --purple: #c084fc;
-  --purple-dim: #2d1a4a;
-  --hp: #e53e3e;
-  --mp: #4299e1;
-  --xp: #f0b429;
+  /* Light mode */
+  --bg:           #f4f4f6;
+  --bg2:          #ffffff;
+  --surface:      #ffffff;
+  --surface2:     #f0f0f3;
+  --surface3:     #e2e2e8;
+  --border:       rgba(0,0,0,0.07);
+  --border-mid:   rgba(0,0,0,0.11);
+  --border-bright:rgba(0,0,0,0.18);
+  --text:         #111118;
+  --text-2:       #2a2a35;
+  --text-3:       #6b6b7a;
+  --text-4:       #a8a8b8;
+  --accent:       #4f46e5;
+  --accent-light: #eeecfd;
+  --accent-mid:   rgba(79,70,229,0.12);
+  --accent-dark:  #3730a3;
+  --blue:         #4f46e5;
+  --blue-light:   #eeecfd;
+  --blue-mid:     rgba(79,70,229,0.12);
+  --green:        #16a34a;
+  --green-light:  #dcfce7;
+  --red:          #dc2626;
+  --red-light:    #fee2e2;
+  --orange:       #d97706;
+  --orange-light: #fef3c7;
+  --purple:       #7c3aed;
+  --purple-light: #ede9fe;
+  --shadow-sm:    0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-md:    0 4px 12px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg:    0 12px 32px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.05);
+  --radius-sm:    6px;
+  --radius-md:    10px;
+  --radius-lg:    12px;
+  --radius-xl:    16px;
 }
+
+/* Dark mode tokens */
+[data-theme="dark"] {
+  --bg:           #0f0f11;
+  --bg2:          #18181c;
+  --surface:      #18181c;
+  --surface2:     #1f1f25;
+  --surface3:     #27272f;
+  --border:       rgba(255,255,255,0.06);
+  --border-mid:   rgba(255,255,255,0.10);
+  --border-bright:rgba(255,255,255,0.18);
+  --text:         #f0f0f5;
+  --text-2:       #c8c8d8;
+  --text-3:       #7878a0;
+  --text-4:       #4a4a68;
+  --accent:       #6366f1;
+  --accent-light: #1e1b4b;
+  --accent-mid:   rgba(99,102,241,0.15);
+  --accent-dark:  #818cf8;
+  --blue:         #6366f1;
+  --blue-light:   #1e1b4b;
+  --blue-mid:     rgba(99,102,241,0.15);
+  --green:        #22c55e;
+  --green-light:  #052e16;
+  --red:          #f87171;
+  --red-light:    #2d0a0a;
+  --orange:       #fbbf24;
+  --orange-light: #2d1a00;
+  --purple:       #a78bfa;
+  --purple-light: #2e1065;
+  --shadow-sm:    0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md:    0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg:    0 12px 32px rgba(0,0,0,0.5);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; }
 
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 13px;
-  line-height: 1.6;
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
   min-height: 100vh;
-  overflow-x: hidden;
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
-/* ── BACKGROUND TEXTURE ── */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image:
-    radial-gradient(ellipse at 20% 50%, rgba(120,80,10,0.06) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 20%, rgba(60,30,100,0.06) 0%, transparent 50%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%23080710'/%3E%3Crect width='1' height='1' x='0' y='0' fill='%230f0d18' opacity='.4'/%3E%3Crect width='1' height='1' x='2' y='2' fill='%230f0d18' opacity='.4'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* ── FLOATING PARTICLES ── */
-.particles {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  overflow: hidden;
-}
-.particle {
-  position: absolute;
-  width: 2px; height: 2px;
-  background: var(--gold);
-  border-radius: 50%;
-  opacity: 0;
-  animation: floatUp var(--dur) var(--delay) infinite ease-in;
-}
-@keyframes floatUp {
-  0% { opacity: 0; transform: translateY(0) translateX(0); }
-  10% { opacity: 0.6; }
-  90% { opacity: 0.2; }
-  100% { opacity: 0; transform: translateY(-100vh) translateX(var(--drift)); }
-}
-
-/* ── NAV / HUD ── */
+/* ── NAV ─────────────────────────────────────── */
 nav {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 100;
-  background: rgba(8,7,10,0.92);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border-gold);
-  box-shadow: 0 1px 0 rgba(240,180,41,0.08), 0 4px 30px rgba(0,0,0,0.8);
-  display: flex;
-  flex-direction: column;
-}
-
-.nav-top {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-mid);
+  height: 54px;
   display: flex;
   align-items: center;
-  padding: 0.5rem 1.5rem;
-  gap: 1.5rem;
-  border-bottom: 1px solid var(--border);
-  min-height: 44px;
-}
-
-.nav-bottom {
-  display: flex;
-  align-items: center;
-  padding: 0 1rem;
-  gap: 2px;
-  height: 38px;
+  padding: 0 1.5rem;
+  gap: 1rem;
+  transition: background 0.25s ease, border-color 0.25s ease;
+  box-shadow: var(--shadow-sm);
 }
 
 .nav-logo {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
-  color: var(--gold);
-  text-shadow: 0 0 20px var(--gold-glow-strong);
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-  text-decoration: none;
+  color: var(--text);
+  letter-spacing: -0.3px;
+  flex-shrink: 0;
 }
-
-.hud-bars {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-  flex: 1;
-}
-.hud-bar-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 10px;
-  color: var(--text-muted);
-}
-.hud-bar-label { letter-spacing: 0.08em; text-transform: uppercase; min-width: 22px; }
-.hud-bar {
-  width: 80px;
-  height: 8px;
-  background: var(--surface3);
-  border-radius: 2px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  position: relative;
-}
-.hud-bar-fill {
-  height: 100%;
-  border-radius: 1px;
-  transition: width 0.5s ease;
-  position: relative;
-}
-.hud-bar-fill::after {
-  content: '';
-  position: absolute;
-  top: 0; right: 0;
-  width: 3px; height: 100%;
-  background: rgba(255,255,255,0.5);
-  border-radius: 1px;
-}
-.hud-bar-fill.hp { background: linear-gradient(90deg, #7f1d1d, var(--hp)); }
-.hud-bar-fill.mp { background: linear-gradient(90deg, #1e3a5f, var(--mp)); }
-.hud-bar-fill.xp { background: linear-gradient(90deg, #78450a, var(--xp)); }
-.hud-bar-val { font-size: 10px; color: var(--text-muted); min-width: 28px; }
-
-.level-badge {
-  background: var(--surface2);
-  border: 1px solid var(--border-gold);
-  border-radius: 4px;
-  padding: 0.2rem 0.6rem;
-  font-family: 'Cinzel', serif;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--gold);
-  letter-spacing: 0.05em;
-  white-space: nowrap;
+.nav-logo span {
+  color: var(--accent);
 }
 
 .nav-tabs {
   display: flex;
-  gap: 2px;
+  gap: 0;
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  margin-left: auto;
+  border: 1px solid var(--border);
 }
 
 .nav-tab {
-  padding: 0.5rem 1.1rem;
-  border-radius: 3px 3px 0 0;
+  padding: 0.3rem 0.9rem;
+  border-radius: 4px;
   cursor: pointer;
-  font-family: 'Cinzel', serif;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
-  border: 1px solid transparent;
-  border-bottom: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-3);
+  border: none;
   background: none;
-  transition: all 0.2s;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  height: 38px;
+  transition: all 0.15s ease;
+  letter-spacing: -0.1px;
+  white-space: nowrap;
+}
+.nav-tab:hover { color: var(--text); background: var(--surface3); }
+.nav-tab.active {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-mid);
+}
+
+.nav-right {
   display: flex;
   align-items: center;
-}
-.nav-tab:hover {
-  color: var(--gold);
-  background: var(--gold-glow);
-  border-color: var(--border-gold);
-  border-bottom-color: transparent;
-}
-.nav-tab.active {
-  color: var(--gold);
-  background: var(--gold-glow);
-  border-color: var(--border-gold);
-  border-bottom-color: transparent;
-  box-shadow: 0 0 12px var(--gold-glow);
+  gap: 0.6rem;
+  flex-shrink: 0;
 }
 
-/* ── MAIN ── */
+.sync-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  letter-spacing: -0.1px;
+  white-space: nowrap;
+  transition: all 0.2s;
+  font-family: 'DM Mono', monospace;
+}
+.sync-idle    { background: var(--surface2); color: var(--text-4); border: 1px solid var(--border); }
+.sync-saving  { background: var(--orange-light); color: var(--orange); border: 1px solid rgba(217,119,6,0.2); }
+.sync-saved   { background: var(--green-light);  color: var(--green);  border: 1px solid rgba(22,163,74,0.2); }
+.sync-error   { background: var(--red-light);    color: var(--red);    border: 1px solid rgba(220,38,38,0.2); }
+.sync-loading { background: var(--blue-light);   color: var(--blue);   border: 1px solid rgba(79,70,229,0.2); }
+
+.nav-icon-btn {
+  width: 30px; height: 30px;
+  border-radius: var(--radius-sm);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  color: var(--text-3);
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.nav-icon-btn:hover { background: var(--surface3); color: var(--text); border-color: var(--border-mid); }
+
+.user-chip {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: 'DM Mono', monospace;
+}
+
+/* ── LAYOUT ──────────────────────────────────── */
 main {
-  padding-top: 86px;
-  max-width: 1440px;
+  padding-top: 54px;
+  max-width: 1200px;
   margin: 0 auto;
-  position: relative;
-  z-index: 2;
 }
 
-.page { display: none; padding: 2rem; }
+.page { display: none; padding: 1.75rem 1.5rem; }
 .page.active { display: block; }
 
-/* ── PAGE HEADER ── */
-.page-header {
-  margin-bottom: 2rem;
-  position: relative;
-  padding-bottom: 1rem;
-}
-.page-header::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0;
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(90deg, var(--border-gold), transparent);
-}
+.page-header { margin-bottom: 1.5rem; }
 .page-header h1 {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
-  color: var(--gold);
-  text-shadow: 0 0 30px var(--gold-glow-strong);
-  letter-spacing: 0.05em;
+  letter-spacing: -0.5px;
+  color: var(--text);
 }
 .page-header p {
-  color: var(--text-muted);
-  margin-top: 0.25rem;
-  font-size: 11px;
-  font-family: 'Share Tech Mono', monospace;
-  letter-spacing: 0.05em;
+  color: var(--text-3);
+  margin-top: 0.2rem;
+  font-size: 13px;
 }
 
-/* ── GRID ── */
-.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-.grid-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 1rem; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.875rem; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.875rem; }
+.grid-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 0.875rem; }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-@media (max-width: 900px) {
-  .grid-3, .grid-2, .grid-1-2 { grid-template-columns: 1fr; }
-}
+@media (max-width: 900px) { .grid-3, .grid-2, .grid-1-2 { grid-template-columns: 1fr; } }
 @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
 
-/* ── CARD / PANEL ── */
+/* ── CARDS ───────────────────────────────────── */
 .card {
-  background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
-  border: 1px solid var(--border-gold);
-  border-radius: 4px;
-  padding: 1.5rem;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
   position: relative;
   overflow: hidden;
+  transition: background 0.25s ease, border-color 0.25s ease;
 }
-
-/* corner ornaments */
-.card::before, .card::after {
+.card::before {
   content: '';
   position: absolute;
-  width: 12px; height: 12px;
-  border-color: var(--border-bright);
-  border-style: solid;
-  opacity: 0.6;
+  top: 0; left: 0;
+  width: 3px; height: 100%;
+  background: transparent;
+  transition: background 0.2s;
 }
-.card::before { top: 4px; left: 4px; border-width: 1px 0 0 1px; }
-.card::after  { bottom: 4px; right: 4px; border-width: 0 1px 1px 0; }
-
-.card-inner-tl, .card-inner-br {
-  position: absolute;
-  width: 8px; height: 8px;
-  border-color: var(--border-gold);
-  border-style: solid;
-  opacity: 0.4;
-}
-.card-inner-tl { top: 4px; right: 4px; border-width: 1px 1px 0 0; }
-.card-inner-br { bottom: 4px; left: 4px; border-width: 0 0 1px 1px; }
-
-/* glow on hover */
-.card:hover {
-  border-color: var(--border-bright);
-  box-shadow: 0 0 20px rgba(120,80,10,0.15), inset 0 0 40px rgba(120,80,10,0.03);
-}
-
-.accent-card {
-  border-color: var(--border-bright);
-  background: linear-gradient(135deg, #110e05, #1a1505);
-  box-shadow: 0 0 30px rgba(240,180,41,0.1);
-}
+.card:hover::before { background: var(--accent); }
 
 .card-title {
-  font-family: 'Cinzel', serif;
   font-size: 11px;
   font-weight: 700;
-  color: var(--gold);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  margin-bottom: 1rem;
+  color: var(--text-4);
+  letter-spacing: 0.06em;
+  margin-bottom: 0.875rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-}
-.card-title .badge {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 10px;
-  padding: 2px 8px;
-  border-radius: 2px;
-  background: var(--surface3);
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-  text-transform: none;
-  letter-spacing: 0;
-  font-weight: 400;
+  text-transform: uppercase;
 }
 
-/* ── STAT CARDS ── */
+/* Hero cards */
+.hero-card {
+  background: linear-gradient(135deg, #111118 0%, #1c1c28 100%);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: var(--shadow-lg);
+}
+[data-theme="dark"] .hero-card {
+  background: linear-gradient(135deg, #1a1a22 0%, #22222e 100%);
+  border-color: rgba(255,255,255,0.08);
+}
+.hero-card::before { display: none; }
+.hero-card .card-title { color: rgba(255,255,255,0.4); }
+.hero-card .stat-value { color: #fff; }
+.hero-card .stat-label { color: rgba(255,255,255,0.45); }
+
+.blue-card {
+  background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+  color: #fff;
+  border: none;
+  box-shadow: 0 8px 24px rgba(79,70,229,0.28);
+}
+.blue-card::before { display: none; }
+.blue-card .card-title { color: rgba(255,255,255,0.55); }
+.blue-card .stat-value { color: #fff; }
+.blue-card .stat-label { color: rgba(255,255,255,0.55); }
+
+.green-card {
+  background: linear-gradient(135deg, #16a34a 0%, #166534 100%);
+  color: #fff;
+  border: none;
+  box-shadow: 0 8px 24px rgba(22,163,74,0.22);
+}
+.green-card::before { display: none; }
+.green-card .card-title { color: rgba(255,255,255,0.55); }
+.green-card .stat-value { color: #fff; }
+.green-card .stat-label { color: rgba(255,255,255,0.55); }
+
+/* ── STAT VALUES ─────────────────────────────── */
 .stat-value {
-  font-family: 'Cinzel', serif;
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 700;
-  letter-spacing: -0.5px;
-  margin: 0.5rem 0;
+  letter-spacing: -0.8px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  margin: 0.3rem 0;
 }
-.stat-label { font-size: 10px; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; }
-.stat-change { font-size: 11px; display: flex; align-items: center; gap: 0.25rem; margin-top: 0.5rem; }
-.stat-change.up { color: var(--green); }
-.stat-change.down { color: var(--red); }
+.stat-label {
+  font-size: 11px;
+  color: var(--text-3);
+  font-weight: 500;
+  letter-spacing: -0.1px;
+}
+.stat-change {
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-top: 0.5rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+.stat-change.up   { background: var(--green-light); color: var(--green); }
+.stat-change.down { background: var(--red-light);   color: var(--red); }
+.stat-change.muted { color: var(--text-4); background: none; padding: 0; }
 
-/* ── XP / PROGRESS BARS ── */
-.progress-wrap { margin: 0.75rem 0; }
+/* ── PROGRESS BARS ───────────────────────────── */
+.progress-wrap { margin: 0.6rem 0; }
 .progress-label {
   display: flex;
   justify-content: space-between;
   margin-bottom: 0.35rem;
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 500;
 }
-.progress-label span:first-child { color: var(--text); font-family: 'Share Tech Mono', monospace; }
-.progress-label span:last-child { color: var(--text-muted); }
-
+.progress-label span:first-child { color: var(--text-2); }
+.progress-label span:last-child  { color: var(--text-3); }
 .progress-bar {
-  height: 10px;
+  height: 5px;
   background: var(--surface3);
   border-radius: 2px;
-  border: 1px solid var(--border);
-  overflow: hidden;
+  overflow: visible;
   position: relative;
-}
-.progress-bar::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    90deg,
-    transparent 0px,
-    transparent 8px,
-    rgba(0,0,0,0.15) 8px,
-    rgba(0,0,0,0.15) 9px
-  );
-  pointer-events: none;
 }
 .progress-fill {
   height: 100%;
-  transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
-  position: relative;
+  border-radius: 2px;
+  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
 }
-.progress-fill::after {
-  content: '';
-  position: absolute;
-  top: 0; right: 0;
-  width: 4px; height: 100%;
-  background: rgba(255,255,255,0.4);
-}
-.fill-accent, .fill-gold { background: linear-gradient(90deg, #78450a, var(--gold)); box-shadow: 0 0 8px rgba(240,180,41,0.4); }
-.fill-green { background: linear-gradient(90deg, #14381e, var(--green)); box-shadow: 0 0 6px rgba(74,222,128,0.3); }
-.fill-yellow { background: linear-gradient(90deg, #78450a, #fbbf24); box-shadow: 0 0 6px rgba(251,191,36,0.3); }
-.fill-red { background: linear-gradient(90deg, #4a1010, var(--red)); box-shadow: 0 0 6px rgba(248,113,113,0.3); }
-.fill-blue { background: linear-gradient(90deg, #0f2040, var(--blue)); box-shadow: 0 0 6px rgba(96,165,250,0.3); }
+.fill-blue   { background: var(--accent); }
+.fill-green  { background: var(--green); }
+.fill-red    { background: var(--red); }
+.fill-yellow { background: var(--orange); }
+.fill-accent { background: var(--accent); }
+.fill-gold   { background: var(--orange); }
+.fill-purple { background: var(--purple); }
 
-/* ── FORM ELEMENTS ── */
-.form-row { display: flex; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; }
-.form-group { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 120px; }
+/* ── FORMS ───────────────────────────────────── */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+  min-width: 120px;
+}
 .form-group label {
-  font-size: 10px;
-  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-3);
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-family: 'Cinzel', serif;
 }
-
 input, select, textarea {
   background: var(--surface2);
-  border: 1px solid var(--border-gold);
-  border-radius: 3px;
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-sm);
   color: var(--text);
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 12px;
-  padding: 0.55rem 0.8rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  padding: 0.55rem 0.75rem;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.25s;
   width: 100%;
+  -webkit-appearance: none;
 }
 input:focus, select:focus, textarea:focus {
-  border-color: var(--gold);
-  box-shadow: 0 0 0 2px var(--gold-glow), 0 0 12px var(--gold-glow);
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--accent-mid);
 }
-select option { background: var(--surface2); color: var(--text); }
+select option { background: var(--surface); color: var(--text); }
 
-/* ── BUTTONS ── */
+/* ── BUTTONS ─────────────────────────────────── */
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 1.1rem;
-  border-radius: 3px;
-  font-family: 'Cinzel', serif;
-  font-size: 11px;
+  gap: 0.35rem;
+  padding: 0.45rem 1rem;
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.06em;
   cursor: pointer;
-  border: 1px solid;
-  transition: all 0.2s;
+  border: none;
+  transition: all 0.15s;
   white-space: nowrap;
-  text-transform: uppercase;
+  letter-spacing: -0.1px;
 }
 .btn-primary {
-  background: linear-gradient(135deg, #5a3a05, #8a5a0a);
-  color: var(--gold);
-  border-color: var(--border-gold);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(79,70,229,0.28);
 }
-.btn-primary:hover {
-  background: linear-gradient(135deg, #7a5010, #b07510);
-  border-color: var(--border-bright);
-  box-shadow: 0 0 16px var(--gold-glow-strong);
-  transform: translateY(-1px);
-}
+.btn-primary:hover { background: var(--accent-dark); box-shadow: 0 4px 10px rgba(79,70,229,0.35); transform: translateY(-1px); }
 .btn-ghost {
   background: var(--surface2);
-  color: var(--text-muted);
-  border-color: var(--border);
+  color: var(--text-2);
+  border: 1px solid var(--border-mid);
 }
-.btn-ghost:hover { background: var(--surface3); color: var(--text); border-color: var(--border-gold); }
+.btn-ghost:hover { background: var(--surface3); }
 .btn-danger {
-  background: var(--red-dim);
+  background: var(--red-light);
   color: var(--red);
-  border-color: rgba(248,113,113,0.3);
+  border: 1px solid rgba(220,38,38,0.15);
 }
-.btn-danger:hover { background: #5a1a1a; box-shadow: 0 0 8px rgba(248,113,113,0.2); }
-.btn-sm { padding: 0.3rem 0.65rem; font-size: 10px; }
+.btn-danger:hover { filter: brightness(0.95); }
+.btn-sm { padding: 0.28rem 0.65rem; font-size: 11px; }
 
-/* ── TABLES ── */
-.table-wrap { overflow-x: auto; }
+/* ── TABLES ──────────────────────────────────── */
+.table-wrap { overflow-x: auto; margin: 0 -0.1rem; }
 table { width: 100%; border-collapse: collapse; }
 th {
   text-align: left;
   font-size: 10px;
-  color: var(--gold);
+  font-weight: 700;
+  color: var(--text-4);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid var(--border-gold);
-  font-family: 'Cinzel', serif;
-  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 0.45rem 0.75rem;
+  border-bottom: 1px solid var(--border-mid);
 }
 td {
   padding: 0.65rem 0.75rem;
   border-bottom: 1px solid var(--border);
   font-size: 12px;
-  color: var(--text);
+  color: var(--text-2);
 }
 tr:last-child td { border-bottom: none; }
-tr:hover td { background: rgba(240,180,41,0.03); }
+tr:hover td { background: var(--surface2); }
 
-/* ── TAGS ── */
+/* ── TAGS ────────────────────────────────────── */
 .tag {
   display: inline-block;
-  padding: 2px 8px;
-  border-radius: 2px;
+  padding: 2px 7px;
+  border-radius: 3px;
   font-size: 10px;
-  font-weight: 600;
-  font-family: 'Cinzel', serif;
-  letter-spacing: 0.04em;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
 }
-.tag-green  { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(74,222,128,0.3); }
-.tag-red    { background: var(--red-dim);    color: var(--red);    border: 1px solid rgba(248,113,113,0.3); }
-.tag-yellow { background: #3d2e0a;           color: #fbbf24;       border: 1px solid rgba(251,191,36,0.3); }
-.tag-blue   { background: var(--blue-dim);   color: var(--blue);   border: 1px solid rgba(96,165,250,0.3); }
-.tag-purple { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(192,132,252,0.3); }
-.tag-gold   { background: #3d2a05;           color: var(--gold);   border: 1px solid var(--border-gold); }
+.tag-green  { background: var(--green-light);  color: var(--green); }
+.tag-red    { background: var(--red-light);    color: var(--red); }
+.tag-yellow { background: var(--orange-light); color: var(--orange); }
+.tag-blue   { background: var(--blue-light);   color: var(--blue); }
+.tag-purple { background: var(--purple-light); color: var(--purple); }
+.tag-gold   { background: var(--orange-light); color: var(--orange); }
 
-/* ── UTILITY ── */
+/* ── UTILITY ─────────────────────────────────── */
 .green  { color: var(--green); }
 .red    { color: var(--red); }
-.gold   { color: var(--gold); }
-.yellow { color: #fbbf24; }
 .blue   { color: var(--blue); }
-.muted  { color: var(--text-muted); }
-.mono   { font-family: 'Share Tech Mono', monospace; }
-.divider { height: 1px; background: linear-gradient(90deg, var(--border-gold), transparent); margin: 1.25rem 0; }
-.section-gap { margin-bottom: 1.25rem; }
+.orange { color: var(--orange); }
+.muted  { color: var(--text-3); }
+.bold   { font-weight: 600; }
+.mono   { font-family: 'DM Mono', monospace; }
+.section-gap { margin-bottom: 0.875rem; }
+.divider { height: 1px; background: var(--border); margin: 1rem 0; }
 
-/* ── EMPTY STATE ── */
+/* ── EMPTY STATE ─────────────────────────────── */
 .empty {
   text-align: center;
-  padding: 2.5rem 1rem;
-  color: var(--text-dim);
+  padding: 2rem 1rem;
+  color: var(--text-4);
   font-size: 12px;
-  font-family: 'Cinzel', serif;
-  letter-spacing: 0.05em;
+  font-weight: 500;
 }
-.empty-icon { font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.3; display: block; }
+.empty-icon { font-size: 1.75rem; margin-bottom: 0.4rem; display: block; opacity: 0.35; }
 
-/* ── MODAL ── */
+/* ── MODAL ───────────────────────────────────── */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(4,3,8,0.85);
-  backdrop-filter: blur(6px);
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
   z-index: 200;
   display: none;
   align-items: center;
@@ -552,158 +539,159 @@ tr:hover td { background: rgba(240,180,41,0.03); }
 }
 .modal-overlay.open { display: flex; }
 .modal {
-  background: linear-gradient(160deg, #0f0d18, #151220);
-  border: 1px solid var(--border-gold);
-  border-radius: 4px;
-  padding: 2rem;
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
   width: 100%;
   max-width: 480px;
   position: relative;
-  box-shadow: 0 0 60px rgba(0,0,0,0.8), 0 0 30px rgba(120,80,10,0.15);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-mid);
+  max-height: 90vh;
+  overflow-y: auto;
+  transition: background 0.25s ease;
 }
-.modal::before, .modal::after {
-  content: '';
-  position: absolute;
-  width: 14px; height: 14px;
-  border-color: var(--border-bright);
-  border-style: solid;
-  opacity: 0.7;
+.modal-handle {
+  width: 32px; height: 3px;
+  background: var(--surface3);
+  border-radius: 2px;
+  margin: 0 auto 1.25rem;
 }
-.modal::before { top: 6px; left: 6px; border-width: 2px 0 0 2px; }
-.modal::after  { bottom: 6px; right: 6px; border-width: 0 2px 2px 0; }
 .modal-title {
-  font-family: 'Cinzel', serif;
   font-size: 16px;
   font-weight: 700;
-  color: var(--gold);
-  margin-bottom: 1.5rem;
-  text-shadow: 0 0 20px var(--gold-glow-strong);
-  letter-spacing: 0.05em;
+  letter-spacing: -0.3px;
+  color: var(--text);
+  margin-bottom: 1.25rem;
 }
 .modal-close {
   position: absolute;
-  top: 1rem; right: 1rem;
+  top: 1.1rem; right: 1.1rem;
   background: var(--surface2);
-  border: 1px solid var(--border-gold);
-  color: var(--text-muted);
-  width: 28px; height: 28px;
-  border-radius: 3px;
+  border: 1px solid var(--border);
+  color: var(--text-3);
+  width: 26px; height: 26px;
+  border-radius: 4px;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  font-size: 14px;
-  font-family: 'Cinzel', serif;
-  transition: all 0.2s;
+  font-size: 12px;
+  font-weight: 700;
+  transition: all 0.15s;
 }
-.modal-close:hover { color: var(--gold); border-color: var(--border-bright); box-shadow: 0 0 8px var(--gold-glow); }
+.modal-close:hover { background: var(--surface3); color: var(--text); }
 
-/* ── CALENDAR ── */
+/* ── CALENDAR ────────────────────────────────── */
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
 .cal-header-cell {
   text-align: center;
   font-size: 10px;
-  color: var(--gold);
+  font-weight: 700;
+  color: var(--text-4);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 0.5rem 0;
-  font-family: 'Cinzel', serif;
-  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 0.4rem 0;
 }
 .cal-cell {
   aspect-ratio: 1;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  border: 1px solid transparent;
-  transition: all 0.15s;
+  transition: all 0.12s;
   font-size: 12px;
+  font-weight: 500;
   position: relative;
-  font-family: 'Share Tech Mono', monospace;
+  color: var(--text-2);
 }
-.cal-cell:hover { background: var(--gold-glow); border-color: var(--border-gold); }
+.cal-cell:hover { background: var(--surface2); }
 .cal-cell.today {
-  background: var(--gold-glow);
-  border-color: var(--border-bright);
-  color: var(--gold);
+  background: var(--accent);
+  color: #fff;
   font-weight: 700;
-  box-shadow: 0 0 12px var(--gold-glow);
+  box-shadow: 0 2px 8px rgba(79,70,229,0.35);
 }
-.cal-cell.other-month { color: var(--text-dim); }
-.cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-.cal-nav h2 { font-family: 'Cinzel', serif; font-weight: 700; font-size: 14px; color: var(--gold); letter-spacing: 0.06em; }
+.cal-cell.other-month { color: var(--text-4); }
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.875rem;
+}
+.cal-nav h2 {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--text);
+}
 
-/* ── EVENT LIST ── */
+/* ── EVENT LIST ──────────────────────────────── */
 .event-item {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.75rem 0;
+  gap: 0.65rem;
+  padding: 0.65rem 0;
   border-bottom: 1px solid var(--border);
 }
 .event-item:last-child { border-bottom: none; }
 .event-dot {
   width: 8px; height: 8px;
-  border-radius: 1px;
-  margin-top: 5px;
+  border-radius: 2px;
+  margin-top: 4px;
   flex-shrink: 0;
-  transform: rotate(45deg);
 }
-.event-info { flex: 1; }
-.event-title { font-size: 12px; font-weight: 600; font-family: 'Share Tech Mono', monospace; }
-.event-meta { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.event-info { flex: 1; min-width: 0; }
+.event-title { font-size: 12px; font-weight: 600; color: var(--text); letter-spacing: -0.1px; }
+.event-meta  { font-size: 10px; color: var(--text-4); margin-top: 1px; }
 
-/* ── HEALTH ── */
+/* ── HEALTH ──────────────────────────────────── */
 .workout-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 0.75rem;
   padding: 0.75rem;
   background: var(--surface2);
-  border-radius: 3px;
-  margin-bottom: 0.5rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 0.4rem;
   border: 1px solid var(--border);
 }
 .workout-icon {
   width: 36px; height: 36px;
-  border-radius: 3px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
   font-size: 16px;
   flex-shrink: 0;
-  background: var(--surface3);
-  border: 1px solid var(--border-gold);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
-.macro-bar { display: flex; gap: 0.5rem; margin: 0.5rem 0; }
+.macro-bar { display: flex; gap: 0.4rem; margin: 0.65rem 0; }
 .macro-pill {
   flex: 1;
-  background: var(--surface3);
-  border-radius: 3px;
-  padding: 0.6rem;
+  background: var(--surface2);
+  border-radius: var(--radius-md);
+  padding: 0.65rem;
   text-align: center;
   border: 1px solid var(--border);
 }
-.macro-pill .val { font-family: 'Cinzel', serif; font-weight: 700; font-size: 16px; }
-.macro-pill .lbl { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; font-family: 'Cinzel', serif; }
+.macro-pill .val { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; }
+.macro-pill .lbl { font-size: 9px; color: var(--text-4); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
 
-/* ── MEAL SLOTS ── */
+/* ── MEAL SLOTS ──────────────────────────────── */
 .meal-slot {
   background: var(--surface2);
+  border-radius: var(--radius-md);
+  padding: 0.875rem;
+  margin-bottom: 0.5rem;
   border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 1rem;
-  margin-bottom: 0.75rem;
 }
 .meal-slot-header {
-  font-family: 'Cinzel', serif;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  color: var(--gold);
+  color: var(--text-3);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 0.5rem;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.4rem;
   display: flex;
   justify-content: space-between;
 }
@@ -711,245 +699,174 @@ tr:hover td { background: rgba(240,180,41,0.03); }
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  padding: 0.25rem 0;
+  padding: 0.3rem 0;
   border-bottom: 1px solid var(--border);
+  color: var(--text-2);
 }
 .meal-item-line:last-child { border-bottom: none; }
 
-/* ── SCROLLBAR ── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border-gold); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: var(--border-bright); }
-
-/* ── ANIMATIONS ── */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes goldPulse {
-  0%, 100% { box-shadow: 0 0 8px var(--gold-glow); }
-  50%       { box-shadow: 0 0 20px var(--gold-glow-strong); }
-}
-.page.active .card { animation: fadeUp 0.4s ease both; }
-.page.active .card:nth-child(1) { animation-delay: 0ms; }
-.page.active .card:nth-child(2) { animation-delay: 70ms; }
-.page.active .card:nth-child(3) { animation-delay: 140ms; }
-.accent-card { animation: goldPulse 4s ease infinite; }
-
-/* ── RPG LOOT NOTIFICATION ── */
-.loot-toast {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  background: linear-gradient(135deg, #1a1505, #2a2008);
-  border: 1px solid var(--border-bright);
-  border-radius: 4px;
-  padding: 0.85rem 1.25rem;
-  color: var(--gold);
-  font-family: 'Cinzel', serif;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  z-index: 300;
-  box-shadow: 0 0 30px var(--gold-glow-strong);
-  transform: translateX(120%);
-  transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
-  max-width: 280px;
-}
-.loot-toast.show { transform: translateX(0); }
-.loot-toast .toast-icon { font-size: 16px; margin-right: 0.5rem; }
-
-/* ── SYNC BADGE ── */
-.sync-badge {
-  font-size: 10px;
-  font-family: 'Cinzel', serif;
-  letter-spacing: 0.05em;
-  padding: 0.25rem 0.65rem;
-  border-radius: 3px;
-  border: 1px solid;
-  white-space: nowrap;
-  transition: all 0.3s;
-}
-.sync-idle    { color: var(--text-dim);   border-color: var(--border);       background: var(--surface2); }
-.sync-saving  { color: #fbbf24;           border-color: rgba(251,191,36,0.4); background: #3d2e0a; }
-.sync-saved   { color: var(--green);      border-color: rgba(74,222,128,0.4); background: var(--green-dim); }
-.sync-error   { color: var(--red);        border-color: rgba(248,113,113,0.4);background: var(--red-dim); }
-.sync-loading { color: var(--blue);       border-color: rgba(96,165,250,0.4); background: var(--blue-dim); }
-
-/* ── SETTINGS MODAL SPECIFICS ── */
+/* ── SETTINGS ────────────────────────────────── */
 .settings-section {
-  margin-bottom: 1.25rem;
-  padding-bottom: 1.25rem;
+  margin-bottom: 1.1rem;
+  padding-bottom: 1.1rem;
   border-bottom: 1px solid var(--border);
 }
 .settings-section:last-child { border-bottom: none; margin-bottom: 0; }
 .settings-section-title {
-  font-family: 'Cinzel', serif;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  color: var(--gold);
+  color: var(--text-4);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 0.75rem;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.65rem;
 }
 .settings-hint {
-  font-size: 10px;
-  color: var(--text-muted);
-  margin-top: 0.4rem;
+  font-size: 11px;
+  color: var(--text-4);
+  margin-top: 0.3rem;
   line-height: 1.5;
 }
-.settings-hint a { color: var(--gold); text-decoration: none; }
-.settings-hint a:hover { text-decoration: underline; }
+.settings-hint a { color: var(--accent); text-decoration: none; }
 
+/* ── AUTH SCREEN ─────────────────────────────── */
+#auth-screen { background: var(--bg); font-family: 'DM Sans', sans-serif; transition: background 0.25s; }
+.auth-card {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 380px;
+  border: 1px solid var(--border-mid);
+}
 
+/* ── TOAST ───────────────────────────────────── */
+.loot-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  background: var(--text);
+  color: var(--bg);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-sm);
+  z-index: 300;
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.3s cubic-bezier(0.175,0.885,0.32,1.275), opacity 0.3s;
+  opacity: 0;
+  white-space: nowrap;
+  letter-spacing: -0.1px;
+}
+.loot-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+/* ── DEBT RING ───────────────────────────────── */
 .debt-ring-wrap { display:flex; justify-content:center; align-items:center; padding:1rem 0; }
-.debt-ring { position:relative; width:120px; height:120px; }
+.debt-ring { position:relative; width:110px; height:110px; }
 .debt-ring svg { transform: rotate(-90deg); }
-.debt-ring-label { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:'Cinzel',serif; }
-.debt-ring-label .pct { font-size:22px; font-weight:700; }
-.debt-ring-label .sub { font-size:9px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em; }
+.debt-ring-label { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.debt-ring-label .pct { font-size:20px; font-weight:700; letter-spacing:-1px; }
+.debt-ring-label .sub { font-size:9px; color:var(--text-4); font-weight:700; text-transform:uppercase; letter-spacing:0.06em; }
 
-/* ── SECTION DIVIDERS WITH RUNES ── */
-.rune-divider {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 1.25rem 0;
-  color: var(--text-dim);
-  font-size: 14px;
+/* ── SCROLLBAR ───────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 2px; }
+
+/* ── ANIMATIONS ──────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-.rune-divider::before, .rune-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border-gold), transparent);
-}
+.page.active > * { animation: fadeUp 0.28s ease both; }
+.page.active > *:nth-child(1) { animation-delay: 0ms; }
+.page.active > *:nth-child(2) { animation-delay: 50ms; }
+.page.active > *:nth-child(3) { animation-delay: 100ms; }
+.page.active > *:nth-child(4) { animation-delay: 150ms; }
+.page.active > *:nth-child(5) { animation-delay: 200ms; }
+
+/* ── INLINE EDIT ─────────────────────────────── */
+.inline-edit { display:flex; align-items:center; gap:0.4rem; }
+.inline-edit input { max-width:90px; padding:0.3rem 0.5rem; font-size:12px; }
+
 </style>
 </head>
 <body>
 
-<!-- PARTICLES -->
-<div class="particles" id="particles"></div>
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+  <div class="loading-logo">Dash<span>board</span></div>
+  <div class="loading-spinner"></div>
+</div>
 
-<!-- NAV / HUD -->
+<!-- NAV -->
 <nav>
-  <div class="nav-top">
-    <div class="nav-logo">⚔ Chronicle</div>
-    <div class="hud-bars">
-      <div class="hud-bar-wrap">
-        <span class="hud-bar-label" style="color:var(--hp)">HP</span>
-        <div class="hud-bar"><div class="hud-bar-fill hp" id="hud-hp" style="width:82%"></div></div>
-        <span class="hud-bar-val" style="color:var(--hp)" id="hud-hp-val">82</span>
-      </div>
-      <div class="hud-bar-wrap">
-        <span class="hud-bar-label" style="color:var(--mp)">MP</span>
-        <div class="hud-bar"><div class="hud-bar-fill mp" id="hud-mp" style="width:65%"></div></div>
-        <span class="hud-bar-val" style="color:var(--mp)" id="hud-mp-val">65</span>
-      </div>
-      <div class="hud-bar-wrap">
-        <span class="hud-bar-label" style="color:var(--xp)">XP</span>
-        <div class="hud-bar"><div class="hud-bar-fill xp" id="hud-xp" style="width:40%"></div></div>
-        <span class="hud-bar-val" style="color:var(--xp)" id="hud-xp-val">40%</span>
-      </div>
-    </div>
-    <div class="level-badge" id="player-level">LVL 1</div>
-    <div id="user-display" style="font-size:10px;color:var(--text-muted);font-family:'Cinzel',serif;letter-spacing:0.04em;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
-    <div id="sync-status" class="sync-badge sync-idle" title="Firebase sync status">⬡ Not connected</div>
-    <button class="btn btn-ghost btn-sm" onclick="openModal('modal-settings')" title="Firebase Settings">⚙ Sync</button>
-    <button class="btn btn-ghost btn-sm" onclick="authSignOut()" title="Sign out" id="signout-btn">↪ Sign Out</button>
+  <div class="nav-logo">Dash<span>board</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('finance', this)">Finance</button>
+    <button class="nav-tab" onclick="showPage('year', this)">Year</button>
+    <button class="nav-tab" onclick="showPage('calendar', this)">Calendar</button>
+    <button class="nav-tab" onclick="showPage('health', this)">Health</button>
+    <button class="nav-tab" onclick="showPage('meals', this)">Meals</button>
   </div>
-  <div class="nav-bottom">
-    <div class="nav-tabs">
-      <button class="nav-tab active" onclick="showPage('finance', this)">⚖ Finance</button>
-      <button class="nav-tab" onclick="showPage('calendar', this)">📜 Calendar</button>
-      <button class="nav-tab" onclick="showPage('health', this)">⚔ Health</button>
-      <button class="nav-tab" onclick="showPage('meals', this)">🍖 Meals</button>
-    </div>
+  <div class="nav-right">
+    <span class="user-chip" id="user-display"></span>
+    <div id="sync-status" class="sync-pill sync-idle">Not connected</div>
+    <button class="nav-icon-btn" onclick="openModal('modal-settings')" title="Sync Settings">⚙</button>
+    <button class="nav-icon-btn" onclick="authSignOut()" title="Sign out" id="signout-btn">↪</button>
   </div>
 </nav>
 
-<!-- AUTH SCREEN -->
-<div id="auth-screen" style="display:none;position:fixed;inset:0;z-index:500;background:var(--bg);align-items:center;justify-content:center;padding:1rem">
-  <div style="width:100%;max-width:400px">
-    <!-- Logo -->
-    <div style="text-align:center;margin-bottom:2rem">
-      <div style="font-family:'Cinzel Decorative',serif;font-size:22px;font-weight:700;color:var(--gold);text-shadow:0 0 30px var(--gold-glow-strong);letter-spacing:0.05em">⚔ Chronicle</div>
-      <div style="font-size:11px;color:var(--text-muted);margin-top:0.4rem;font-family:'Cinzel',serif;letter-spacing:0.08em;text-transform:uppercase">of the Evergrind</div>
-    </div>
-
-    <!-- Card -->
-    <div class="card" style="border-color:var(--border-bright);box-shadow:0 0 40px rgba(120,80,10,0.2)">
-      <div id="auth-mode" data-mode="login">
-        <div class="card-title" style="justify-content:center;font-size:14px;margin-bottom:1.5rem">
-          <span id="auth-title">Sign In</span>
-        </div>
-
-        <div class="form-group" style="margin-bottom:0.75rem">
-          <label>Email</label>
-          <input type="email" id="auth-email" placeholder="adventurer@realm.com" onkeydown="if(event.key==='Enter')authSignIn()">
-        </div>
-        <div class="form-group" style="margin-bottom:0.25rem">
-          <label>Password</label>
-          <input type="password" id="auth-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')authSignIn()">
-        </div>
-
-        <div style="text-align:right;margin-bottom:1rem">
-          <button class="btn btn-ghost btn-sm" style="border:none;background:none;color:var(--text-muted);font-size:10px;padding:0.2rem 0" onclick="authResetPassword()">Forgot password?</button>
-        </div>
-
-        <div id="auth-error" style="display:none;background:var(--red-dim);border:1px solid rgba(248,113,113,0.3);border-radius:3px;padding:0.6rem 0.8rem;font-size:11px;color:var(--red);margin-bottom:1rem"></div>
-
-        <button id="auth-submit-btn" class="btn btn-primary" style="width:100%;justify-content:center;padding:0.65rem" onclick="authSignIn()">Sign In</button>
-
-        <div style="text-align:center;margin-top:1.25rem;font-size:10px;color:var(--text-dim)">
-          No Firebase config yet?
-          <button class="btn btn-ghost btn-sm" style="border:none;background:none;color:var(--text-muted);font-size:10px;padding:0 0.3rem" onclick="document.getElementById('auth-screen').style.display='none';openModal('modal-settings')">Configure Firebase →</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- APP WRAPPER -->
-<div id="app-wrapper">
 <main>
 
-<!-- ═══════════════ FINANCE / TREASURY ═══════════════ -->
+<!-- ═══════════════ FINANCE ═══════════════ -->
 <section id="page-finance" class="page active">
-  <div class="page-header">
-    <h1>⚖ Finance</h1>
-    <p>// Manage your gold, debts, and the coffers of your domain</p>
+  <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+    <div>
+      <h1>Finance</h1>
+      <p>Your financial overview</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.5rem;background:var(--surface);border:1px solid var(--border);border-radius:99px;padding:0.3rem 0.5rem;box-shadow:var(--shadow-sm)">
+      <button class="nav-icon-btn" style="width:28px;height:28px;font-size:13px" onclick="shiftFinanceMonth(-1)">‹</button>
+      <span id="finance-month-label" style="font-size:13px;font-weight:600;letter-spacing:-0.2px;min-width:110px;text-align:center;color:var(--text)">March 2026</span>
+      <button class="nav-icon-btn" style="width:28px;height:28px;font-size:13px" onclick="shiftFinanceMonth(1)">›</button>
+      <button class="btn btn-ghost btn-sm" onclick="resetFinanceMonth()" id="finance-month-reset" style="display:none;padding:0.2rem 0.6rem;font-size:11px">Today</button>
+    </div>
   </div>
 
+  <!-- Top stat cards -->
   <div class="grid-3 section-gap">
-    <div class="card accent-card">
+    <div class="card hero-card">
       <div class="card-title">Net Worth</div>
-      <div class="stat-value gold" id="net-worth">0 GP</div>
-      <div class="stat-label">Total Assets − Liabilities</div>
-      <div class="stat-change up" id="net-worth-change">— awaiting ledger entries</div>
+      <div class="stat-value" id="net-worth">$0</div>
+      <div class="stat-label">Assets − Liabilities</div>
+      <div class="stat-change muted" id="net-worth-change" style="margin-top:0.75rem">—</div>
     </div>
-    <div class="card">
+    <div class="card blue-card">
       <div class="card-title">This Month</div>
-      <div class="stat-value green" id="budget-remaining">0 GP</div>
-      <div class="stat-label" id="budget-remaining-label">Remaining coffers</div>
-      <div class="progress-wrap" style="margin-top:0.75rem">
-        <div class="progress-bar"><div class="progress-fill fill-gold" id="budget-bar" style="width:0%"></div></div>
+      <div class="stat-value" id="budget-remaining">$0</div>
+      <div class="stat-label" id="budget-remaining-label">Remaining</div>
+      <div class="progress-wrap" style="margin-top:0.85rem">
+        <div class="progress-bar" style="background:rgba(255,255,255,0.2)">
+          <div class="progress-fill" id="budget-bar" style="width:0%;background:rgba(255,255,255,0.9)"></div>
+        </div>
       </div>
-      <div style="margin-top:0.5rem;display:flex;justify-content:space-between;font-size:11px">
-        <span class="green" id="summary-income-label">Earned: 0 GP</span>
-        <span class="red"   id="summary-expense-label">Spent: 0 GP</span>
+      <div style="margin-top:0.6rem;display:flex;justify-content:space-between;font-size:12px;font-weight:500">
+        <span style="color:rgba(255,255,255,0.7)" id="summary-income-label">Earned: $0</span>
+        <span style="color:rgba(255,255,255,0.7)" id="summary-expense-label">Spent: $0</span>
       </div>
     </div>
-    <div class="card">
+    <div class="card green-card">
       <div class="card-title">Total Debt</div>
-      <div class="stat-value red" id="total-debt">0 GP</div>
-      <div class="stat-label">Owed across all creditors</div>
-      <div class="stat-change muted" id="debt-paid">Log payments to track progress</div>
+      <div class="stat-value" id="total-debt">$0</div>
+      <div class="stat-label">Across all accounts</div>
+      <div class="stat-change muted" id="debt-paid" style="color:rgba(255,255,255,0.6);margin-top:0.75rem">Log payments to track</div>
     </div>
   </div>
 
-  <!-- BUDGET + EXPENSES -->
+  <!-- Budget + Expenses -->
   <div class="grid-2 section-gap">
     <div class="card">
       <div class="card-title">
@@ -963,43 +880,43 @@ tr:hover td { background: rgba(240,180,41,0.03); }
     <div class="card">
       <div class="card-title">
         Expenses
-        <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-expense')">+ Spend</button>
+        <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-expense')">+ Add</button>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th></th></tr></thead>
+          <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Card</th><th>Amount</th><th></th></tr></thead>
           <tbody id="expense-body">
-            <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-dim)">No expenses logged</td></tr>
+            <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-4)">No expenses logged</td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- BILLS -->
+  <!-- Bills -->
   <div class="card section-gap">
     <div class="card-title">
       Bills
       <div style="display:flex;align-items:center;gap:0.5rem">
-        <span class="badge" id="bills-due-badge" style="display:none;background:var(--red-dim);color:var(--red);border-color:rgba(248,113,113,0.3)"></span>
+        <span id="bills-due-badge" style="display:none;background:var(--red-light);color:var(--red);font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px"></span>
         <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-bill')">+ Add</button>
       </div>
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Bill</th><th>Category</th><th>Amount</th><th>Due Day</th><th>Recurrence</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Bill</th><th>Category</th><th>Amount</th><th>Due Day</th><th>Recurrence</th><th>Card</th><th>Status</th><th></th></tr></thead>
         <tbody id="bills-body">
-          <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-dim)">No bills added — bills will auto-log as expenses on their due date</td></tr>
+          <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-4)">No bills added — bills will auto-log as expenses on their due date</td></tr>
         </tbody>
       </table>
     </div>
-    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-gold);display:flex;justify-content:space-between;align-items:center">
-      <span class="muted" style="font-size:11px;font-family:'Cinzel',serif;letter-spacing:0.06em;text-transform:uppercase">Monthly Bills Total</span>
-      <span class="red" style="font-family:'Cinzel',serif;font-weight:700;font-size:18px" id="total-bills-display">0 GP/mo</span>
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:13px;font-weight:500;color:var(--text-3)">Monthly Bills Total</span>
+      <span class="red" style="font-size:18px;font-weight:700;letter-spacing:-0.5px;font-variant-numeric:tabular-nums" id="total-bills-display">$0/mo</span>
     </div>
   </div>
 
-  <!-- SAVINGS + DEBT -->
+  <!-- Savings + Debt -->
   <div class="grid-2 section-gap">
     <div class="card">
       <div class="card-title">
@@ -1013,69 +930,159 @@ tr:hover td { background: rgba(240,180,41,0.03); }
     <div class="card">
       <div class="card-title">
         Debt Tracker
-        <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-debt')">+ Debt</button>
+        <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-debt')">+ Add</button>
       </div>
       <div id="debt-list">
-        <div class="empty"><span class="empty-icon">💀</span>No debts added</div>
+        <div class="empty"><span class="empty-icon">📉</span>No debts added</div>
       </div>
     </div>
   </div>
 
-  <!-- ASSETS -->
+  <!-- Assets -->
   <div class="card section-gap">
     <div class="card-title">
       Assets
-      <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-asset')">+ Asset</button>
+      <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-asset')">+ Add</button>
     </div>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Asset</th><th>Type</th><th>Value</th><th>Notes</th><th></th></tr></thead>
         <tbody id="asset-body">
-          <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-dim)">No assets added</td></tr>
+          <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-4)">No assets added</td></tr>
         </tbody>
       </table>
     </div>
-    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-gold);display:flex;justify-content:space-between;align-items:center">
-      <span class="muted" style="font-size:11px;font-family:'Cinzel',serif;letter-spacing:0.06em;text-transform:uppercase">Total Assets</span>
-      <span class="green" style="font-family:'Cinzel',serif;font-weight:700;font-size:18px" id="total-assets-display">0 GP</span>
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:13px;font-weight:500;color:var(--text-3)">Total Assets</span>
+      <span class="green" style="font-size:18px;font-weight:700;letter-spacing:-0.5px;font-variant-numeric:tabular-nums" id="total-assets-display">$0</span>
     </div>
   </div>
 
-  <!-- INCOME -->
+  <!-- Credit Cards -->
+  <div class="card section-gap">
+    <div class="card-title">
+      Credit Cards
+      <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-card')">+ Add Card</button>
+    </div>
+    <div id="cards-list">
+      <div class="empty"><span class="empty-icon">💳</span>No cards added — add a card to track spending per card</div>
+    </div>
+  </div>
+
+  <!-- Income -->
   <div class="card section-gap">
     <div class="card-title">
       Income
-      <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-income')">+ Log Gold</button>
+      <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-income')">+ Log</button>
     </div>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Date</th><th>Source</th><th>Type</th><th>Amount</th><th>Notes</th><th></th></tr></thead>
         <tbody id="income-body">
-          <tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--text-dim)">No income logged yet</td></tr>
+          <tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--text-4)">No income logged yet</td></tr>
         </tbody>
       </table>
     </div>
-    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-gold);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem">
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem">
       <div style="display:flex;gap:2rem">
         <div>
-          <div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;font-family:'Cinzel',serif">This Cycle</div>
-          <div class="green" style="font-family:'Cinzel',serif;font-weight:700;font-size:18px" id="income-this-month">0 GP</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-4);text-transform:uppercase;letter-spacing:0.04em">This Month</div>
+          <div class="green" style="font-size:20px;font-weight:700;letter-spacing:-0.5px;font-variant-numeric:tabular-nums" id="income-this-month">$0</div>
         </div>
         <div>
-          <div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;font-family:'Cinzel',serif">All Time</div>
-          <div class="gold" style="font-family:'Cinzel',serif;font-weight:700;font-size:18px" id="income-all-time">0 GP</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-4);text-transform:uppercase;letter-spacing:0.04em">All Time</div>
+          <div style="font-size:20px;font-weight:700;letter-spacing:-0.5px;color:var(--text);font-variant-numeric:tabular-nums" id="income-all-time">$0</div>
         </div>
       </div>
-      <div id="income-vs-expenses" style="font-size:11px;color:var(--text-muted)">—</div>
+      <div id="income-vs-expenses" style="font-size:12px;color:var(--text-4)">—</div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════ CALENDAR / QUEST LOG ═══════════════ -->
+<!-- ═══════════════ YEAR OVERVIEW ═══════════════ -->
+<section id="page-year" class="page">
+  <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+    <div>
+      <h1>Year Overview</h1>
+      <p id="year-subtitle">Annual financial summary</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.5rem;background:var(--surface);border:1px solid var(--border);border-radius:99px;padding:0.3rem 0.5rem;box-shadow:var(--shadow-sm)">
+      <button class="nav-icon-btn" style="width:28px;height:28px;font-size:13px" onclick="shiftYear(-1)">‹</button>
+      <span id="year-label" style="font-size:13px;font-weight:600;letter-spacing:-0.2px;min-width:50px;text-align:center;color:var(--text)">2026</span>
+      <button class="nav-icon-btn" style="width:28px;height:28px;font-size:13px" onclick="shiftYear(1)">›</button>
+    </div>
+  </div>
+
+  <!-- Annual stat cards -->
+  <div class="grid-3 section-gap">
+    <div class="card hero-card">
+      <div class="card-title">Total Income</div>
+      <div class="stat-value" id="year-income">$0</div>
+      <div class="stat-label">Earned this year</div>
+    </div>
+    <div class="card blue-card">
+      <div class="card-title">Total Spent</div>
+      <div class="stat-value" id="year-spent">$0</div>
+      <div class="stat-label">Expenses this year</div>
+    </div>
+    <div class="card green-card">
+      <div class="card-title">Net Surplus</div>
+      <div class="stat-value" id="year-surplus">$0</div>
+      <div class="stat-label" id="year-surplus-label">Income − Expenses</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="card section-gap">
+    <div class="card-title">Monthly Income vs Expenses</div>
+    <div style="position:relative;height:220px;margin-top:0.5rem">
+      <canvas id="year-bar-chart"></canvas>
+    </div>
+    <div style="display:flex;gap:1.5rem;margin-top:1rem;font-size:12px;font-weight:500">
+      <span style="display:flex;align-items:center;gap:0.4rem"><span style="width:12px;height:12px;border-radius:3px;background:var(--green);display:inline-block"></span>Income</span>
+      <span style="display:flex;align-items:center;gap:0.4rem"><span style="width:12px;height:12px;border-radius:3px;background:var(--red);display:inline-block"></span>Expenses</span>
+      <span style="display:flex;align-items:center;gap:0.4rem"><span style="width:12px;height:3px;background:var(--blue);display:inline-block;border-radius:2px"></span>Running Balance</span>
+    </div>
+  </div>
+
+  <!-- Top spending categories -->
+  <div class="grid-2 section-gap">
+    <div class="card">
+      <div class="card-title">Top Spending Categories</div>
+      <div id="year-categories"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Bills Paid This Year</div>
+      <div id="year-bills-summary"></div>
+    </div>
+  </div>
+
+  <!-- Month-by-month table -->
+  <div class="card section-gap">
+    <div class="card-title">Month by Month</div>
+    <div class="table-wrap">
+      <table id="year-month-table">
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>Income</th>
+            <th>Expenses</th>
+            <th>Bills Paid</th>
+            <th>Net</th>
+            <th>Savings Rate</th>
+          </tr>
+        </thead>
+        <tbody id="year-month-body"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ CALENDAR ═══════════════ -->
 <section id="page-calendar" class="page">
   <div class="page-header">
-    <h1>📜 Calendar</h1>
-    <p>// Active quests, deadlines, and scheduled encounters</p>
+    <h1>Calendar</h1>
+    <p>Events and scheduled reminders</p>
   </div>
   <div class="grid-1-2">
     <div class="card">
@@ -1094,25 +1101,25 @@ tr:hover td { background: rgba(240,180,41,0.03); }
         <button class="btn btn-ghost btn-sm" onclick="calNav(1)">Next →</button>
       </div>
       <div class="cal-grid" id="cal-header"></div>
-      <div style="height:8px"></div>
+      <div style="height:6px"></div>
       <div class="cal-grid" id="cal-body"></div>
-      <div style="margin-top:1rem;display:flex;gap:1rem;font-size:10px;color:var(--text-muted)">
-        <span>🟥 Bill due &nbsp; 🟣 Event</span>
+      <div style="margin-top:1rem;display:flex;gap:1rem;font-size:11px;color:var(--text-4);font-weight:500">
+        <span>🔴 Bill due &nbsp; 🟣 Event</span>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════ HEALTH / COMBAT ═══════════════ -->
+<!-- ═══════════════ HEALTH ═══════════════ -->
 <section id="page-health" class="page">
   <div class="page-header">
-    <h1>⚔ Health & Fitness</h1>
-    <p>// Physical prowess, training log, and body metrics</p>
+    <h1>Health & Fitness</h1>
+    <p>Training log and body metrics</p>
   </div>
   <div class="grid-3 section-gap">
-    <div class="card">
+    <div class="card blue-card">
       <div class="card-title">Weekly Workouts</div>
-      <div class="stat-value gold" id="workouts-this-week" style="color:var(--gold)">0</div>
+      <div class="stat-value" id="workouts-this-week">0</div>
       <div class="stat-label">Sessions this week</div>
     </div>
     <div class="card">
@@ -1122,7 +1129,7 @@ tr:hover td { background: rgba(240,180,41,0.03); }
     </div>
     <div class="card">
       <div class="card-title">Streak</div>
-      <div class="stat-value" id="streak-count" style="color:#fbbf24">0</div>
+      <div class="stat-value" id="streak-count" style="color:var(--orange)">0</div>
       <div class="stat-label">Day streak 🔥</div>
     </div>
   </div>
@@ -1138,7 +1145,7 @@ tr:hover td { background: rgba(240,180,41,0.03); }
     </div>
     <div class="card">
       <div class="card-title">Body Metrics</div>
-      <div class="form-row">
+      <div class="two-col" style="margin-bottom:0.75rem">
         <div class="form-group">
           <label>Weight (kg)</label>
           <input type="number" id="metric-weight" placeholder="75.0" onchange="updateMetrics()">
@@ -1148,7 +1155,7 @@ tr:hover td { background: rgba(240,180,41,0.03); }
           <input type="number" id="metric-height" placeholder="175" onchange="updateMetrics()">
         </div>
       </div>
-      <div class="form-row">
+      <div class="two-col" style="margin-bottom:0.75rem">
         <div class="form-group">
           <label>Body Fat %</label>
           <input type="number" id="metric-bf" placeholder="15.0" onchange="updateMetrics()">
@@ -1159,24 +1166,26 @@ tr:hover td { background: rgba(240,180,41,0.03); }
         </div>
       </div>
       <div class="divider"></div>
-      <div id="metric-results" style="color:var(--text-muted);font-size:12px">Enter attributes to see stat calculations.</div>
+      <div id="metric-results" style="color:var(--text-3);font-size:13px">Enter attributes to see stat calculations.</div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════ MEALS / RATIONS ═══════════════ -->
+<!-- ═══════════════ MEALS ═══════════════ -->
 <section id="page-meals" class="page">
   <div class="page-header">
-    <h1>🍖 Meal Planning</h1>
-    <p>// Fuel your body for the battles ahead</p>
+    <h1>Meal Planning</h1>
+    <p>Nutrition tracking and daily intake</p>
   </div>
   <div class="grid-3 section-gap">
-    <div class="card">
+    <div class="card hero-card">
       <div class="card-title">Calories Today</div>
-      <div class="stat-value gold" id="cal-today">0</div>
+      <div class="stat-value" id="cal-today">0</div>
       <div class="stat-label">of <span id="cal-goal">2000</span> kcal target</div>
-      <div class="progress-wrap">
-        <div class="progress-bar"><div class="progress-fill fill-yellow" id="cal-bar" style="width:0%"></div></div>
+      <div class="progress-wrap" style="margin-top:0.85rem">
+        <div class="progress-bar" style="background:rgba(255,255,255,0.15)">
+          <div class="progress-fill" id="cal-bar" style="width:0%;background:rgba(255,255,255,0.85)"></div>
+        </div>
       </div>
     </div>
     <div class="card">
@@ -1187,7 +1196,7 @@ tr:hover td { background: rgba(240,180,41,0.03); }
           <div class="lbl">Protein</div>
         </div>
         <div class="macro-pill">
-          <div class="val yellow" id="macro-c">0g</div>
+          <div class="val orange" id="macro-c">0g</div>
           <div class="lbl">Carbs</div>
         </div>
         <div class="macro-pill">
@@ -1198,13 +1207,13 @@ tr:hover td { background: rgba(240,180,41,0.03); }
     </div>
     <div class="card">
       <div class="card-title">Daily Targets</div>
-      <div class="form-group">
+      <div class="form-group" style="margin-bottom:0.65rem">
         <label>Energy Target (kcal)</label>
-        <input type="number" id="cal-goal-input" value="2000" placeholder="2000" onchange="updateCalGoal()">
+        <input type="number" id="cal-goal-input" value="2000" onchange="updateCalGoal()">
       </div>
-      <div class="form-group" style="margin-top:0.5rem">
+      <div class="form-group">
         <label>Protein Target (g)</label>
-        <input type="number" id="protein-goal-input" value="150" placeholder="150">
+        <input type="number" id="protein-goal-input" value="150">
       </div>
     </div>
   </div>
@@ -1219,13 +1228,13 @@ tr:hover td { background: rgba(240,180,41,0.03); }
     <div class="card">
       <div class="card-title">
         Food Log
-        <span class="badge" id="food-count-badge">0 items</span>
+        <span id="food-count-badge" style="font-size:11px;font-weight:500;color:var(--text-4)">0 items</span>
       </div>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Food</th><th>Meal</th><th>Kcal</th><th>P/C/F</th><th></th></tr></thead>
           <tbody id="food-log-body">
-            <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-dim)">No foods logged</td></tr>
+            <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-4)">No foods logged</td></tr>
           </tbody>
         </table>
       </div>
@@ -1234,13 +1243,13 @@ tr:hover td { background: rgba(240,180,41,0.03); }
 </section>
 
 </main>
-</div> <!-- end app-wrapper -->
 
 <!-- ═══════ MODALS ═══════ -->
 
-<!-- Add Budget Category -->
+<!-- Add Budget -->
 <div class="modal-overlay" id="modal-add-budget">
   <div class="modal">
+    <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeModal('modal-add-budget')">✕</button>
     <div class="modal-title">Add Budget Category</div>
     <div class="form-group section-gap">
@@ -1255,11 +1264,11 @@ tr:hover td { background: rgba(240,180,41,0.03); }
       <div class="form-group">
         <label>Color</label>
         <select id="b-color">
-          <option value="gold">Gold</option>
-          <option value="green">Emerald</option>
-          <option value="yellow">Amber</option>
-          <option value="blue">Sapphire</option>
-          <option value="red">Ruby</option>
+          <option value="blue">Blue</option>
+          <option value="green">Green</option>
+          <option value="yellow">Orange</option>
+          <option value="purple">Purple</option>
+          <option value="red">Red</option>
         </select>
       </div>
     </div>
@@ -1273,11 +1282,12 @@ tr:hover td { background: rgba(240,180,41,0.03); }
 <!-- Add Expense -->
 <div class="modal-overlay" id="modal-add-expense">
   <div class="modal">
+    <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeModal('modal-add-expense')">✕</button>
-    <div class="modal-title">💰 Record Expenses</div>
+    <div class="modal-title">Log Expense</div>
     <div class="form-group section-gap">
       <label>Description</label>
-      <input type="text" id="e-desc" placeholder="e.g. Sword maintenance, inn stay">
+      <input type="text" id="e-desc" placeholder="e.g. Groceries, Coffee">
     </div>
     <div class="two-col">
       <div class="form-group">
@@ -1293,21 +1303,26 @@ tr:hover td { background: rgba(240,180,41,0.03); }
       <label>Date</label>
       <input type="date" id="e-date">
     </div>
+    <div class="form-group" style="margin-top:0.75rem">
+      <label>Card Used (optional)</label>
+      <select id="e-card"><option value="">Cash / No Card</option></select>
+    </div>
     <div style="margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:flex-end">
       <button class="btn btn-ghost" onclick="closeModal('modal-add-expense')">Cancel</button>
-      <button class="btn btn-primary" onclick="addExpense()">Record Spend</button>
+      <button class="btn btn-primary" onclick="addExpense()">Log Expense</button>
     </div>
   </div>
 </div>
 
-<!-- Add Saving Goal -->
+<!-- Add Saving -->
 <div class="modal-overlay" id="modal-add-saving">
   <div class="modal">
+    <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeModal('modal-add-saving')">✕</button>
     <div class="modal-title">New Savings Goal</div>
     <div class="form-group section-gap">
       <label>Goal Name</label>
-      <input type="text" id="s-name" placeholder="e.g. Emergency Fund">
+      <input type="text" id="s-name" placeholder="e.g. Emergency Fund, Vacation">
     </div>
     <div class="two-col">
       <div class="form-group">
@@ -1333,11 +1348,12 @@ tr:hover td { background: rgba(240,180,41,0.03); }
 <!-- Add Debt -->
 <div class="modal-overlay" id="modal-add-debt">
   <div class="modal">
+    <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeModal('modal-add-debt')">✕</button>
     <div class="modal-title">Add Debt</div>
     <div class="form-group section-gap">
       <label>Creditor / Debt Name</label>
-      <input type="text" id="d-name" placeholder="e.g. Student Loan">
+      <input type="text" id="d-name" placeholder="e.g. Student Loan, Credit Card">
     </div>
     <div class="two-col">
       <div class="form-group">
@@ -1368,7 +1384,7 @@ tr:hover td { background: rgba(240,180,41,0.03); }
     </div>
     <div style="margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:flex-end">
       <button class="btn btn-ghost" onclick="closeModal('modal-add-debt')">Cancel</button>
-      <button class="btn btn-primary" onclick="addDebt()">Record Debt</button>
+      <button class="btn btn-primary" onclick="addDebt()">Add Debt</button>
     </div>
   </div>
 </div>
@@ -1376,8 +1392,9 @@ tr:hover td { background: rgba(240,180,41,0.03); }
 <!-- Add Income -->
 <div class="modal-overlay" id="modal-add-income">
   <div class="modal">
+    <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeModal('modal-add-income')">✕</button>
-    <div class="modal-title">🪙 Log Income</div>
+    <div class="modal-title">Log Income</div>
     <div class="form-group section-gap">
       <label>Source</label>
       <input type="text" id="i-name" placeholder="e.g. Employer, Client, Freelance">
@@ -1412,7 +1429,7 @@ tr:hover td { background: rgba(240,180,41,0.03); }
     </div>
     <div style="margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:flex-end">
       <button class="btn btn-ghost" onclick="closeModal('modal-add-income')">Cancel</button>
-      <button class="btn btn-primary" onclick="addIncome()">Log Gold</button>
+      <button class="btn btn-primary" onclick="addIncome()">Log Income</button>
     </div>
   </div>
 </div>
@@ -1420,6 +1437,7 @@ tr:hover td { background: rgba(240,180,41,0.03); }
 <!-- Add Bill -->
 <div class="modal-overlay" id="modal-add-bill">
   <div class="modal">
+    <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeModal('modal-add-bill')">✕</button>
     <div class="modal-title">Add Bill</div>
     <div class="form-group section-gap">
@@ -1459,6 +1477,20 @@ tr:hover td { background: rgba(240,180,41,0.03); }
         </select>
       </div>
     </div>
+    <div class="form-group" style="margin-top:0.75rem">
+      <label>Card (optional)</label>
+      <select id="bill-card"><option value="">Cash / No Card</option></select>
+    </div>
+    <div style="margin-top:0.75rem;display:flex;align-items:center;gap:0.75rem;padding:0.85rem 1rem;background:var(--surface2);border-radius:var(--radius-sm);cursor:pointer" onclick="toggleBillAutopay()">
+      <div id="bill-autopay-toggle" style="width:44px;height:26px;border-radius:13px;background:var(--surface3);transition:background 0.2s;flex-shrink:0;position:relative">
+        <div id="bill-autopay-knob" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:transform 0.2s"></div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)">Auto-pay</div>
+        <div style="font-size:11px;color:var(--text-4);margin-top:1px">Automatically mark paid and log expense on due date</div>
+      </div>
+    </div>
+    <input type="hidden" id="bill-autopay" value="0">
     <div style="margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:flex-end">
       <button class="btn btn-ghost" onclick="closeModal('modal-add-bill')">Cancel</button>
       <button class="btn btn-primary" onclick="addBill()">Add Bill</button>
@@ -1469,6 +1501,7 @@ tr:hover td { background: rgba(240,180,41,0.03); }
 <!-- Add Asset -->
 <div class="modal-overlay" id="modal-add-asset">
   <div class="modal">
+    <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeModal('modal-add-asset')">✕</button>
     <div class="modal-title">Add Asset</div>
     <div class="form-group section-gap">
@@ -1507,6 +1540,7 @@ tr:hover td { background: rgba(240,180,41,0.03); }
 <!-- Add Event -->
 <div class="modal-overlay" id="modal-add-event">
   <div class="modal">
+    <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeModal('modal-add-event')">✕</button>
     <div class="modal-title">Add Event</div>
     <div class="form-group section-gap">
@@ -1547,10 +1581,11 @@ tr:hover td { background: rgba(240,180,41,0.03); }
 <!-- Add Workout -->
 <div class="modal-overlay" id="modal-add-workout">
   <div class="modal">
+    <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeModal('modal-add-workout')">✕</button>
     <div class="modal-title">Log Workout</div>
     <div class="form-group section-gap">
-      <label>Training Name</label>
+      <label>Workout Name</label>
       <input type="text" id="w-name" placeholder="e.g. Upper Body Push, Endurance Run">
     </div>
     <div class="two-col">
@@ -1581,12 +1616,12 @@ tr:hover td { background: rgba(240,180,41,0.03); }
       </div>
     </div>
     <div class="form-group" style="margin-top:0.75rem">
-      <label>Session Notes</label>
+      <label>Notes</label>
       <textarea id="w-notes" rows="2" placeholder="PRs, feelings, exercises..."></textarea>
     </div>
     <div style="margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:flex-end">
       <button class="btn btn-ghost" onclick="closeModal('modal-add-workout')">Cancel</button>
-      <button class="btn btn-primary" onclick="addWorkout()">Log Training</button>
+      <button class="btn btn-primary" onclick="addWorkout()">Log Workout</button>
     </div>
   </div>
 </div>
@@ -1594,11 +1629,12 @@ tr:hover td { background: rgba(240,180,41,0.03); }
 <!-- Add Food -->
 <div class="modal-overlay" id="modal-add-meal">
   <div class="modal">
+    <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeModal('modal-add-meal')">✕</button>
     <div class="modal-title">Log Food</div>
     <div class="form-group section-gap">
       <label>Food Name</label>
-      <input type="text" id="f-name" placeholder="e.g. Chicken Breast">
+      <input type="text" id="f-name" placeholder="e.g. Chicken Breast, Brown Rice">
     </div>
     <div class="form-group" style="margin-bottom:0.75rem">
       <label>Meal</label>
@@ -1611,7 +1647,7 @@ tr:hover td { background: rgba(240,180,41,0.03); }
     </div>
     <div class="two-col">
       <div class="form-group">
-        <label>Energy (kcal)</label>
+        <label>Calories (kcal)</label>
         <input type="number" id="f-cal" placeholder="0">
       </div>
       <div class="form-group">
@@ -1631,81 +1667,139 @@ tr:hover td { background: rgba(240,180,41,0.03); }
     </div>
     <div style="margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:flex-end">
       <button class="btn btn-ghost" onclick="closeModal('modal-add-meal')">Cancel</button>
-      <button class="btn btn-primary" onclick="addFood()">Consume</button>
+      <button class="btn btn-primary" onclick="addFood()">Log Food</button>
     </div>
   </div>
 </div>
 
-<!-- Settings / Firebase Modal -->
+<!-- Add Card -->
+<div class="modal-overlay" id="modal-add-card">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal('modal-add-card')">✕</button>
+    <div class="modal-title">Add Credit Card</div>
+    <div class="form-group section-gap">
+      <label>Card Name</label>
+      <input type="text" id="card-name" placeholder="e.g. Amex Gold, Chase Sapphire">
+    </div>
+    <div class="two-col">
+      <div class="form-group">
+        <label>Points Program</label>
+        <input type="text" id="card-points" placeholder="e.g. Membership Rewards">
+      </div>
+      <div class="form-group">
+        <label>Card Color</label>
+        <select id="card-color">
+          <option value="#007aff">Blue</option>
+          <option value="#1c1c1e">Black</option>
+          <option value="#34c759">Green</option>
+          <option value="#ff9500">Gold</option>
+          <option value="#af52de">Purple</option>
+          <option value="#ff3b30">Red</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-card')">Cancel</button>
+      <button class="btn btn-primary" onclick="addCard()">Add Card</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings -->
 <div class="modal-overlay" id="modal-settings">
   <div class="modal" style="max-width:520px">
+    <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeModal('modal-settings')">✕</button>
-    <div class="modal-title">⚙ Firebase Sync Settings</div>
-
+    <div class="modal-title">Sync Settings</div>
     <div class="settings-section">
       <div class="settings-section-title">Connection Status</div>
-      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem">
-        <div id="settings-sync-status" class="sync-badge sync-idle">⬡ Not connected</div>
-        <span id="settings-last-saved" style="font-size:10px;color:var(--text-muted)"></span>
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem">
+        <div id="settings-sync-status" class="sync-pill sync-idle">Not connected</div>
+        <span id="settings-last-saved" style="font-size:11px;color:var(--text-4)"></span>
       </div>
-      <div id="settings-user-row" style="font-size:11px;color:var(--text-muted);margin-bottom:0.75rem;display:none">
-        Signed in as <span id="settings-user-email" style="color:var(--gold)"></span>
+      <div id="settings-user-row" style="font-size:12px;color:var(--text-3);margin-bottom:0.75rem;display:none">
+        Signed in as <span id="settings-user-email" style="color:var(--blue);font-weight:600"></span>
       </div>
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
         <button class="btn btn-ghost btn-sm" onclick="firebaseSaveNow()">↑ Save Now</button>
         <button class="btn btn-ghost btn-sm" onclick="firebaseLoadNow()">↓ Load from Cloud</button>
-        <button class="btn btn-ghost btn-sm" onclick="authSignOut();closeModal('modal-settings')">↪ Sign Out</button>
-        <button class="btn btn-danger btn-sm" onclick="disconnectFirebase()">Disconnect Firebase</button>
+        <button class="btn btn-ghost btn-sm" onclick="authSignOut();closeModal('modal-settings')">Sign Out</button>
+        <button class="btn btn-danger btn-sm" onclick="disconnectFirebase()">Disconnect</button>
       </div>
     </div>
-
     <div class="settings-section">
       <div class="settings-section-title">Firebase Configuration</div>
-      <p class="settings-hint" style="margin-bottom:0.75rem">
-        Paste your Firebase config values from
-        <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a>
-        → Project Settings → Your Apps → Web app config.
-      </p>
-      <div class="form-group" style="margin-bottom:0.6rem">
-        <label>API Key</label>
-        <input type="text" id="fb-apiKey" placeholder="AIzaSy...">
+      <div style="display:flex;align-items:center;gap:0.75rem;padding:0.85rem 1rem;background:var(--green-light);border-radius:var(--radius-sm)">
+        <span style="font-size:18px">🔒</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Configuration managed by administrator</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px">Project: life-dashboard-4410e</div>
+        </div>
       </div>
-      <div class="form-group" style="margin-bottom:0.6rem">
-        <label>Project ID</label>
-        <input type="text" id="fb-projectId" placeholder="my-life-tracker-12345">
-      </div>
-      <div class="form-group" style="margin-bottom:0.6rem">
-        <label>Auth Domain</label>
-        <input type="text" id="fb-authDomain" placeholder="my-app.firebaseapp.com">
-      </div>
-      <div class="form-group" style="margin-bottom:0.6rem">
-        <label>App ID</label>
-        <input type="text" id="fb-appId" placeholder="1:123456789:web:abc123...">
-      </div>
-      <p class="settings-hint">
-        Your credentials are stored only in this browser's localStorage and are never sent anywhere except directly to Firebase.
-      </p>
     </div>
-
     <div class="settings-section">
-      <div class="settings-section-title">Auto-Save</div>
-      <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-size:12px">
-        <input type="checkbox" id="fb-autosave" style="width:auto;accent-color:var(--gold)">
-        <span>Auto-save whenever data changes</span>
-      </label>
-      <p class="settings-hint" style="margin-top:0.4rem">When enabled, every add/edit/delete syncs to Firebase automatically.</p>
+      <div class="settings-section-title">Appearance</div>
+      <div style="display:flex;align-items:center;gap:0.75rem;padding:0.85rem 1rem;background:var(--surface2);border-radius:var(--radius-sm);cursor:pointer;border:1px solid var(--border)" onclick="toggleDarkMode()">
+        <div id="darkmode-toggle" style="width:44px;height:26px;border-radius:13px;background:var(--surface3);transition:background 0.2s;flex-shrink:0;position:relative">
+          <div id="darkmode-knob" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:transform 0.2s"></div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Dark Mode</div>
+          <div style="font-size:11px;color:var(--text-4);margin-top:1px">Switch between light and dark themes</div>
+        </div>
+        <span id="darkmode-label" style="margin-left:auto;font-size:11px;font-weight:700;color:var(--text-4);font-family:'DM Mono',monospace">OFF</span>
+      </div>
     </div>
-
+      <div style="display:flex;align-items:center;gap:0.75rem;padding:0.85rem 1rem;background:var(--surface2);border-radius:var(--radius-sm);cursor:pointer" onclick="toggleAutoSave()">
+        <div id="autosave-toggle" style="width:44px;height:26px;border-radius:13px;background:var(--blue);transition:background 0.2s;flex-shrink:0;position:relative">
+          <div id="autosave-knob" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:transform 0.2s;transform:translateX(18px)"></div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Auto-save whenever data changes</div>
+          <div style="font-size:11px;color:var(--text-4);margin-top:1px">Every add, edit, or delete syncs to Firebase automatically</div>
+        </div>
+      </div>
+      <input type="hidden" id="fb-autosave" value="1">
+    </div>
     <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:0.5rem">
-      <button class="btn btn-ghost" onclick="closeModal('modal-settings')">Close</button>
-      <button class="btn btn-primary" onclick="saveFirebaseConfig()">Connect & Save</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-settings')">Done</button>
     </div>
   </div>
 </div>
 
-<!-- LOOT TOAST -->
+<!-- AUTH SCREEN -->
+<div id="auth-screen" style="display:none;position:fixed;inset:0;z-index:500;background:var(--bg);align-items:center;justify-content:center;padding:1rem">
+  <div style="width:100%;max-width:380px">
+    <div style="text-align:center;margin-bottom:2rem">
+      <div style="font-size:24px;font-weight:800;letter-spacing:-0.8px;color:var(--text)">Dashboard</div>
+      <div style="font-size:14px;color:var(--text-3);margin-top:0.3rem">Sign in to your account</div>
+    </div>
+    <div class="auth-card">
+      <div class="form-group" style="margin-bottom:0.75rem">
+        <label>Email</label>
+        <input type="email" id="auth-email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')authSignIn()">
+      </div>
+      <div class="form-group" style="margin-bottom:0.25rem">
+        <label>Password</label>
+        <input type="password" id="auth-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')authSignIn()">
+      </div>
+      <div style="text-align:right;margin-bottom:1.25rem;margin-top:0.35rem">
+        <button style="background:none;border:none;color:var(--blue);font-size:12px;font-weight:600;cursor:pointer;font-family:'Figtree',sans-serif" onclick="authResetPassword()">Forgot password?</button>
+      </div>
+      <div id="auth-error" style="display:none;background:var(--red-light);border-radius:var(--radius-sm);padding:0.65rem 0.85rem;font-size:12px;font-weight:500;color:var(--red);margin-bottom:1rem"></div>
+      <button id="auth-submit-btn" class="btn btn-primary" style="width:100%;justify-content:center;padding:0.75rem;font-size:15px;border-radius:var(--radius-md)" onclick="authSignIn()">Sign In</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP WRAPPER -->
+<div id="app-wrapper" style="display:none">
+
+<!-- TOAST -->
 <div class="loot-toast" id="loot-toast"></div>
 
+</div> <!-- end app-wrapper -->
 
 <script>
 // ═══════════════════ STATE ═══════════════════
@@ -1720,9 +1814,50 @@ const state = {
   events: [],
   workouts: [],
   foods: [],
+  cards: [],
   calYear: new Date().getFullYear(),
   calMonth: new Date().getMonth()
 };
+
+// ── Month filter state ──────────────────────────────────
+const financeView = {
+  year:  new Date().getFullYear(),
+  month: new Date().getMonth() // 0-indexed
+};
+const yearView = { year: new Date().getFullYear() };
+
+function financeMonthStr() {
+  return `${financeView.year}-${String(financeView.month + 1).padStart(2,'0')}`;
+}
+
+function updateFinanceMonthLabel() {
+  const names = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('finance-month-label').textContent = names[financeView.month] + ' ' + financeView.year;
+  const now = new Date();
+  const isCurrent = financeView.year === now.getFullYear() && financeView.month === now.getMonth();
+  document.getElementById('finance-month-reset').style.display = isCurrent ? 'none' : 'inline-flex';
+}
+
+function shiftFinanceMonth(dir) {
+  financeView.month += dir;
+  if (financeView.month > 11) { financeView.month = 0; financeView.year++; }
+  if (financeView.month < 0)  { financeView.month = 11; financeView.year--; }
+  updateFinanceMonthLabel();
+  renderExpenses(); renderBudgets(); renderIncome(); renderBills(); renderCards(); updateSummary();
+}
+
+function resetFinanceMonth() {
+  financeView.year = new Date().getFullYear();
+  financeView.month = new Date().getMonth();
+  updateFinanceMonthLabel();
+  renderExpenses(); renderBudgets(); renderIncome(); renderBills(); renderCards(); updateSummary();
+}
+
+function shiftYear(dir) {
+  yearView.year += dir;
+  document.getElementById('year-label').textContent = yearView.year;
+  renderYearOverview();
+}
 
 // ═══════════════════ NAVIGATION ═══════════════════
 function showPage(id, tabEl) {
@@ -1731,6 +1866,7 @@ function showPage(id, tabEl) {
   document.getElementById('page-' + id).classList.add('active');
   if (tabEl) tabEl.classList.add('active');
   if (id === 'calendar') renderCalendar();
+  if (id === 'year') renderYearOverview();
 }
 
 // ═══════════════════ MODALS ═══════════════════
@@ -1741,7 +1877,7 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 });
 
 // ═══════════════════ UTILS ═══════════════════
-function fmt(n) { return Number(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' GP'; }
+function fmt(n) { return '$' + Number(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
 function today() { return new Date().toISOString().split('T')[0]; }
 function uid() { return Math.random().toString(36).slice(2); }
 
@@ -1760,25 +1896,17 @@ function addBudgetCategory() {
 
 function renderBudgets() {
   const el = document.getElementById('budget-list');
-
-  // Tally bills that are paid this month (auto-logged as expenses) per budget category
-  const monthKey = billMonthKey({ day: 1 }); // current month string
-  const billSpendByBudgetCat = {};
-  state.bills.forEach(b => {
-    const isPaid = b.paidMonths.includes(monthKey);
-    if (isPaid) {
-      billSpendByBudgetCat[b.cat] = (billSpendByBudgetCat[b.cat] || 0) + b.amount;
-    }
-  });
-
-  // Bills not yet due this month (committed/upcoming)
+  const monthKey = financeMonthStr();
   const todayStr = today();
+
+  const billSpendByBudgetCat = {};
   const upcomingBillsByBudgetCat = {};
   state.bills.forEach(b => {
-    const dueDate = billDueDateThisMonth(b);
     const isPaid = b.paidMonths.includes(monthKey);
-    if (!isPaid && todayStr < dueDate) {
-      upcomingBillsByBudgetCat[b.cat] = (upcomingBillsByBudgetCat[b.cat] || 0) + b.amount;
+    if (isPaid) billSpendByBudgetCat[b.cat] = (billSpendByBudgetCat[b.cat] || 0) + b.amount;
+    else {
+      const dueDate = billDueDateThisMonth(b);
+      if (todayStr < dueDate) upcomingBillsByBudgetCat[b.cat] = (upcomingBillsByBudgetCat[b.cat] || 0) + b.amount;
     }
   });
 
@@ -1788,42 +1916,37 @@ function renderBudgets() {
   }
 
   let html = '';
-
-  // Render user-defined budget categories
   html += state.budgets.map(b => {
-    const expenseSpent = state.expenses.filter(e => e.cat === b.name && !e.fromBill).reduce((s,e) => s + e.amount, 0);
+    const expenseSpent = state.expenses.filter(e => e.cat === b.name && !e.fromBill && e.date.startsWith(monthKey)).reduce((s,e) => s + e.amount, 0);
     const billPaid = billSpendByBudgetCat[b.name] || 0;
     const billUpcoming = upcomingBillsByBudgetCat[b.name] || 0;
     const totalSpent = expenseSpent + billPaid;
     const pct = Math.min(100, (totalSpent / b.limit) * 100);
     const committedPct = Math.min(100, ((totalSpent + billUpcoming) / b.limit) * 100);
     const overBudget = totalSpent > b.limit;
-
     const billDetail = (billPaid > 0 || billUpcoming > 0) ? `
       <div style="display:flex;gap:1rem;margin-top:0.3rem;font-size:10px">
         ${billPaid > 0 ? `<span style="color:var(--red)">💳 ${fmt(billPaid)} bills paid</span>` : ''}
-        ${billUpcoming > 0 ? `<span style="color:var(--yellow)">⏰ ${fmt(billUpcoming)} upcoming</span>` : ''}
+        ${billUpcoming > 0 ? `<span style="color:var(--orange)">⏰ ${fmt(billUpcoming)} upcoming</span>` : ''}
       </div>` : '';
-
     return `<div class="progress-wrap">
       <div class="progress-label">
         <span>${b.name}</span>
         <span class="${overBudget ? 'red' : 'muted'}">${fmt(totalSpent)} / ${fmt(b.limit)}</span>
       </div>
       <div class="progress-bar" style="position:relative">
-        ${billUpcoming > 0 ? `<div class="progress-fill" style="width:${committedPct}%;background:var(--yellow-dim);position:absolute;top:0;left:0;height:100%;border-radius:99px"></div>` : ''}
+        ${billUpcoming > 0 ? `<div class="progress-fill" style="width:${committedPct}%;background:rgba(255,149,0,0.2);position:absolute;top:0;left:0;height:100%;border-radius:99px"></div>` : ''}
         <div class="progress-fill fill-${overBudget ? 'red' : b.color}" style="width:${pct}%;position:relative"></div>
       </div>
       ${billDetail}
     </div>`;
   }).join('');
 
-  // Bills summary section — any bills whose category doesn't match a budget category
   const allBillCats = [...new Set(state.bills.map(b => b.cat))];
   const unmatchedCats = allBillCats.filter(cat => !state.budgets.find(b => b.name === cat));
   if (unmatchedCats.length) {
     html += `<div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
-      <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.75rem">Bills (unbudgeted)</div>`;
+      <div style="font-size:10px;color:var(--text-4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.75rem">Bills (unbudgeted)</div>`;
     html += unmatchedCats.map(cat => {
       const catBills = state.bills.filter(b => b.cat === cat);
       const paid = catBills.filter(b => b.paidMonths.includes(monthKey)).reduce((s,b) => s + b.amount, 0);
@@ -1831,15 +1954,15 @@ function renderBudgets() {
       const total = catBills.reduce((s,b) => s + b.amount, 0);
       return `<div class="progress-wrap">
         <div class="progress-label">
-          <span class="muted">${cat}</span>
-          <span class="muted">${fmt(paid + upcoming)} / ${fmt(total)}</span>
+          <span style="color:var(--text-3)">${cat}</span>
+          <span style="color:var(--text-3)">${fmt(paid + upcoming)} / ${fmt(total)}</span>
         </div>
         <div class="progress-bar">
           <div class="progress-fill fill-red" style="width:${Math.min(100,(paid/total)*100)}%"></div>
         </div>
         <div style="font-size:10px;margin-top:0.3rem;display:flex;gap:1rem">
           ${paid > 0 ? `<span style="color:var(--red)">💳 ${fmt(paid)} paid</span>` : ''}
-          ${upcoming > 0 ? `<span style="color:var(--yellow)">⏰ ${fmt(upcoming)} upcoming</span>` : ''}
+          ${upcoming > 0 ? `<span style="color:var(--orange)">⏰ ${fmt(upcoming)} upcoming</span>` : ''}
         </div>
       </div>`;
     }).join('');
@@ -1849,30 +1972,42 @@ function renderBudgets() {
   el.innerHTML = html || '<div class="empty"><div class="empty-icon">📊</div>No budget categories yet</div>';
 }
 
+
 function addExpense() {
   const desc = document.getElementById('e-desc').value.trim();
   const amount = parseFloat(document.getElementById('e-amount').value) || 0;
   const cat = document.getElementById('e-cat').value;
   const date = document.getElementById('e-date').value || today();
+  const card = document.getElementById('e-card').value;
   if (!desc || !amount) return;
-  state.expenses.push({ id: uid(), desc, amount, cat, date });
+  state.expenses.push({ id: uid(), desc, amount, cat, date, card });
   clearFields(['e-desc','e-amount','e-date']);
   closeModal('modal-add-expense');
-  renderExpenses(); renderBudgets(); renderIncome(); updateSummary();
+  renderExpenses(); renderBudgets(); renderIncome(); renderCards(); updateSummary();
 }
 
 function renderExpenses() {
   const body = document.getElementById('expense-body');
-  if (!state.expenses.length) { body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-dim)">No expenses logged</td></tr>'; return; }
-  const sorted = [...state.expenses].sort((a,b) => b.date.localeCompare(a.date));
-  body.innerHTML = sorted.map(e => `
-    <tr>
-      <td class="muted">${e.date}</td>
-      <td>${e.desc}</td>
-      <td>${e.cat ? `<span class="tag tag-purple">${e.cat}</span>` : '<span class="muted">—</span>'}</td>
-      <td class="red">${fmt(e.amount)}</td>
-      <td><button class="btn btn-danger btn-sm" onclick="removeItem('expenses','${e.id}',renderExpenses,renderBudgets,updateSummary)">✕</button></td>
-    </tr>`).join('');
+  const ms = financeMonthStr();
+  const filtered = state.expenses.filter(e => e.date.startsWith(ms));
+  if (!filtered.length) { body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-4)">No expenses for this month</td></tr>'; return; }
+  const sorted = [...filtered].sort((a,b) => b.date.localeCompare(a.date));
+  body.innerHTML = sorted.map(e => {
+    const cardObj = state.cards.find(c => c.id === e.card);
+    const cardBadge = cardObj
+      ? `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;background:${cardObj.color}18;color:${cardObj.color}">
+           <span style="width:7px;height:7px;border-radius:50%;background:${cardObj.color};display:inline-block"></span>${cardObj.name}
+         </span>`
+      : '<span style="color:var(--text-4);font-size:12px">—</span>';
+    return `<tr>
+      <td style="color:var(--text-3)">${e.date}</td>
+      <td style="font-weight:500">${e.desc}</td>
+      <td>${e.cat ? `<span class="tag tag-blue">${e.cat}</span>` : '<span style="color:var(--text-4)">—</span>'}</td>
+      <td>${cardBadge}</td>
+      <td style="font-weight:600;color:var(--red)">${fmt(e.amount)}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="removeItem('expenses','${e.id}',renderExpenses,renderBudgets,updateSummary,renderCards)">✕</button></td>
+    </tr>`;
+  }).join('');
 }
 
 function updateExpenseCategorySelect() {
@@ -1880,7 +2015,140 @@ function updateExpenseCategorySelect() {
   sel.innerHTML = '<option value="">Uncategorized</option>' + state.budgets.map(b => `<option value="${b.name}">${b.name}</option>`).join('');
 }
 
+// ═══════════════════ CARDS ═══════════════════
+
+function addCard() {
+  const name  = document.getElementById('card-name').value.trim();
+  const points = document.getElementById('card-points').value.trim();
+  const color = document.getElementById('card-color').value;
+  if (!name) return;
+  state.cards.push({ id: uid(), name, points, color });
+  clearFields(['card-name','card-points']);
+  closeModal('modal-add-card');
+  renderCards(); updateCardSelects();
+}
+
+function updateCardSelects() {
+  const opts = '<option value="">Cash / No Card</option>' +
+    state.cards.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  ['e-card','bill-card'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel) sel.innerHTML = opts;
+  });
+}
+
+function renderCards() {
+  const el = document.getElementById('cards-list');
+  if (!state.cards.length) {
+    el.innerHTML = '<div class="empty"><span class="empty-icon">💳</span>No cards added — add a card to track spending per card</div>';
+    return;
+  }
+
+  const now = new Date();
+  const monthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+  el.innerHTML = state.cards.map(c => {
+    // All expenses on this card
+    const cardExpenses = state.expenses.filter(e => e.card === c.id);
+    // This month's unpaid expenses (not from a bill that's already tracked)
+    const thisMonthTotal = cardExpenses
+      .filter(e => e.date.startsWith(monthStr))
+      .reduce((s, e) => s + e.amount, 0);
+    const allTimeTotal = cardExpenses.reduce((s, e) => s + e.amount, 0);
+
+    // Recent transactions (last 5)
+    const recent = [...cardExpenses]
+      .sort((a,b) => b.date.localeCompare(a.date))
+      .slice(0, 5);
+
+    const recentRows = recent.length ? recent.map(e =>
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--border);font-size:13px">
+        <div>
+          <span style="font-weight:500">${e.desc}</span>
+          <span style="color:var(--text-4);font-size:11px;margin-left:0.5rem">${e.date}</span>
+        </div>
+        <span style="font-weight:600;color:var(--red)">${fmt(e.amount)}</span>
+      </div>`
+    ).join('') : `<div style="color:var(--text-4);font-size:12px;padding:0.5rem 0">No transactions yet</div>`;
+
+    return `<div style="margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <div style="width:40px;height:26px;border-radius:5px;background:${c.color};box-shadow:0 2px 6px ${c.color}55;display:flex;align-items:center;justify-content:center">
+            <span style="font-size:11px;color:white;font-weight:800;letter-spacing:-0.5px">💳</span>
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:14px;letter-spacing:-0.2px">${c.name}</div>
+            ${c.points ? `<div style="font-size:11px;color:var(--text-4);font-weight:500">${c.points}</div>` : ''}
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;font-weight:600;color:var(--text-4);text-transform:uppercase;letter-spacing:0.04em">This Month</div>
+          <div style="font-size:20px;font-weight:700;letter-spacing:-0.5px;color:var(--red);font-variant-numeric:tabular-nums">${fmt(thisMonthTotal)}</div>
+          <div style="font-size:11px;color:var(--text-4)">All time: ${fmt(allTimeTotal)}</div>
+        </div>
+      </div>
+
+      <div style="background:var(--surface2);border-radius:var(--radius-md);padding:0.85rem 1rem;margin-bottom:0.75rem">
+        <div style="font-size:11px;font-weight:700;color:var(--text-4);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.4rem">Suggested Extra Payment This Month</div>
+        <div style="font-size:22px;font-weight:800;letter-spacing:-0.8px;color:${c.color};font-variant-numeric:tabular-nums">${fmt(thisMonthTotal)}</div>
+        <div style="font-size:11px;color:var(--text-4);margin-top:0.2rem">Pay this on top of your regular minimum to stay current</div>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--text-4);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.25rem">Recent Transactions</div>
+      ${recentRows}
+
+      <div style="margin-top:0.75rem">
+        <button class="btn btn-danger btn-sm" onclick="removeItem('cards','${c.id}',renderCards,updateCardSelects)">Remove Card</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 // ═══════════════════ BILLS ═══════════════════
+
+function toggleDarkMode() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  setDarkMode(!isDark);
+}
+
+function setDarkMode(on) {
+  document.documentElement.setAttribute('data-theme', on ? 'dark' : 'light');
+  localStorage.setItem('dashboard-theme', on ? 'dark' : 'light');
+  syncDarkModeToggle(on);
+}
+
+function syncDarkModeToggle(on) {
+  const toggle = document.getElementById('darkmode-toggle');
+  const knob   = document.getElementById('darkmode-knob');
+  const label  = document.getElementById('darkmode-label');
+  if (!toggle) return;
+  toggle.style.background = on ? 'var(--accent)' : 'var(--surface3)';
+  knob.style.transform    = on ? 'translateX(18px)' : 'translateX(0)';
+  if (label) label.textContent = on ? 'ON' : 'OFF';
+}
+
+// Apply saved theme immediately on load
+(function() {
+  const saved = localStorage.getItem('dashboard-theme');
+  if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+})();
+
+function toggleBillAutopay() {
+  const input = document.getElementById('bill-autopay');
+  const toggle = document.getElementById('bill-autopay-toggle');
+  const knob = document.getElementById('bill-autopay-knob');
+  const on = input.value === '1';
+  input.value = on ? '0' : '1';
+  toggle.style.background = on ? 'var(--surface3)' : 'var(--blue)';
+  knob.style.transform = on ? 'translateX(0)' : 'translateX(18px)';
+}
+
+function resetBillAutopay() {
+  document.getElementById('bill-autopay').value = '0';
+  document.getElementById('bill-autopay-toggle').style.background = 'var(--surface3)';
+  document.getElementById('bill-autopay-knob').style.transform = 'translateX(0)';
+}
 
 function addBill() {
   const name = document.getElementById('bill-name').value.trim();
@@ -1888,10 +2156,13 @@ function addBill() {
   const day = parseInt(document.getElementById('bill-day').value) || 1;
   const cat = document.getElementById('bill-cat').value;
   const recur = document.getElementById('bill-recur').value;
+  const card = document.getElementById('bill-card').value;
+  const autoPay = document.getElementById('bill-autopay').value === '1';
   if (!name || !amount) return;
-  const bill = { id: uid(), name, amount, day, cat, recur, paidMonths: [] };
+  const bill = { id: uid(), name, amount, day, cat, recur, card, autoPay, paidMonths: [] };
   state.bills.push(bill);
   clearFields(['bill-name','bill-amount','bill-day']);
+  resetBillAutopay();
   closeModal('modal-add-bill');
   syncBillToCalendar(bill);
   checkAndAutoLogBills();
@@ -1942,23 +2213,15 @@ function checkAndAutoLogBills() {
   state.bills.forEach(bill => {
     const dueDate = billDueDateThisMonth(bill);
     const monthKey = billMonthKey(bill);
-    // Auto-log if today is on or after the due date and not already logged this month
-    if (todayStr >= dueDate && !bill.paidMonths.includes(monthKey)) {
+    if (bill.autoPay && todayStr >= dueDate && !bill.paidMonths.includes(monthKey)) {
       bill.paidMonths.push(monthKey);
       state.expenses.push({
-        id: uid(),
-        desc: bill.name,
-        amount: bill.amount,
-        cat: bill.cat,
-        date: dueDate,
-        fromBill: true
+        id: uid(), desc: bill.name, amount: bill.amount,
+        cat: bill.cat, card: bill.card || '', date: dueDate, fromBill: true
       });
     }
   });
-  renderExpenses();
-  renderBudgets();
-  renderBills();
-  updateSummary();
+  renderExpenses(); renderBudgets(); renderBills(); updateSummary();
 }
 
 function markBillPaid(id) {
@@ -1968,7 +2231,10 @@ function markBillPaid(id) {
   if (!bill.paidMonths.includes(monthKey)) {
     bill.paidMonths.push(monthKey);
     const dueDate = billDueDateThisMonth(bill);
-    state.expenses.push({ id: uid(), desc: bill.name, amount: bill.amount, cat: bill.cat, date: dueDate, fromBill: true });
+    state.expenses.push({
+      id: uid(), desc: bill.name, amount: bill.amount,
+      cat: bill.cat, card: bill.card || '', date: dueDate, fromBill: true
+    });
     renderExpenses(); renderBudgets(); updateSummary();
   }
   renderBills();
@@ -1989,7 +2255,7 @@ function renderBills() {
   // Due badge
   const overdueBills = state.bills.filter(b => {
     const dueDate = billDueDateThisMonth(b);
-    return todayStr >= dueDate && !b.paidMonths.includes(billMonthKey(b));
+    return !b.autoPay && todayStr > dueDate && !b.paidMonths.includes(billMonthKey(b));
   });
   const badge = document.getElementById('bills-due-badge');
   if (overdueBills.length) {
@@ -2000,7 +2266,7 @@ function renderBills() {
   }
 
   if (!state.bills.length) {
-    body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-dim)">No bills added — bills will auto-log as expenses on their due date</td></tr>';
+    body.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-4)">No bills added — bills will auto-log as expenses on their due date</td></tr>';
     return;
   }
 
@@ -2008,19 +2274,32 @@ function renderBills() {
     const dueDate = billDueDateThisMonth(b);
     const monthKey = billMonthKey(b);
     const isPaid = b.paidMonths.includes(monthKey);
-    const isOverdue = !isPaid && todayStr >= dueDate;
+    const isOverdue = !isPaid && todayStr > dueDate;
     const isDueSoon = !isPaid && !isOverdue && (new Date(dueDate) - new Date(todayStr)) / 86400000 <= 5;
+
     let statusHtml;
-    if (isPaid) statusHtml = `<span class="tag tag-green">✓ Paid</span>`;
-    else if (isOverdue) statusHtml = `<span class="tag tag-red">⚡ Auto-logged</span>`;
-    else if (isDueSoon) statusHtml = `<span class="tag tag-yellow">⏰ Due soon</span>`;
-    else statusHtml = `<span class="tag" style="background:var(--surface3);color:var(--text-muted)">Upcoming</span>`;
+    if (isPaid && b.autoPay)  statusHtml = `<span class="tag tag-green">⚡ Auto-paid</span>`;
+    else if (isPaid)           statusHtml = `<span class="tag tag-green">✓ Paid</span>`;
+    else if (isOverdue)        statusHtml = `<span class="tag tag-red">⚠ Late</span>`;
+    else if (isDueSoon)        statusHtml = `<span class="tag tag-yellow">⏰ Due soon</span>`;
+    else                       statusHtml = `<span class="tag" style="background:var(--surface3);color:var(--text-3)">Upcoming</span>`;
+
+    const autoPayBadge = b.autoPay
+      ? `<span style="font-size:10px;font-weight:600;color:var(--blue);background:var(--blue-mid);padding:1px 6px;border-radius:20px;margin-left:5px">AUTO</span>`
+      : '';
+
+    const cardObj = state.cards.find(c => c.id === b.card);
+    const cardBadge = cardObj
+      ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:20px;background:${cardObj.color}18;color:${cardObj.color}"><span style="width:6px;height:6px;border-radius:50%;background:${cardObj.color};display:inline-block"></span>${cardObj.name}</span>`
+      : '<span style="color:var(--text-4);font-size:12px">—</span>';
+
     return `<tr>
-      <td style="font-weight:600">${b.name}</td>
+      <td style="font-weight:600">${b.name}${autoPayBadge}</td>
       <td><span class="tag ${catColors[b.cat] || 'tag-purple'}">${b.cat}</span></td>
-      <td class="red">${fmt(b.amount)}</td>
-      <td class="muted">Day ${b.day}</td>
-      <td class="muted">${b.recur}</td>
+      <td style="font-weight:600;color:var(--red)">${fmt(b.amount)}</td>
+      <td style="color:var(--text-3)">Day ${b.day}</td>
+      <td style="color:var(--text-3)">${b.recur}</td>
+      <td>${cardBadge}</td>
       <td>${statusHtml}</td>
       <td style="display:flex;gap:0.4rem">
         ${!isPaid ? `<button class="btn btn-ghost btn-sm" onclick="markBillPaid('${b.id}')">Mark Paid</button>` : ''}
@@ -2190,41 +2469,37 @@ function addIncome() {
 function renderIncome() {
   const body = document.getElementById('income-body');
   const typeColors = { Salary:'tag-green', Freelance:'tag-blue', Investment:'tag-purple', 'Side Hustle':'tag-yellow', Bonus:'tag-yellow', Gift:'tag-blue', Other:'tag-purple' };
+  const ms = financeMonthStr();
+  const filtered = state.income.filter(i => i.date.startsWith(ms));
 
-  if (!state.income.length) {
-    body.innerHTML = '<tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--text-dim)">No income logged yet</td></tr>';
+  if (!filtered.length) {
+    body.innerHTML = '<tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--text-4)">No income for this month</td></tr>';
   } else {
-    const sorted = [...state.income].sort((a,b) => b.date.localeCompare(a.date));
+    const sorted = [...filtered].sort((a,b) => b.date.localeCompare(a.date));
     body.innerHTML = sorted.map(i => `
       <tr>
-        <td class="muted">${i.date}</td>
+        <td style="color:var(--text-3)">${i.date}</td>
         <td style="font-weight:600">${i.name}</td>
         <td><span class="tag ${typeColors[i.type] || 'tag-green'}">${i.type}</span></td>
-        <td class="green">${fmt(i.amount)}</td>
-        <td class="muted">${i.notes || '—'}</td>
+        <td style="font-weight:600;color:var(--green)">${fmt(i.amount)}</td>
+        <td style="color:var(--text-3)">${i.notes || '—'}</td>
         <td><button class="btn btn-danger btn-sm" onclick="removeItem('income','${i.id}',renderIncome,updateSummary)">✕</button></td>
       </tr>`).join('');
   }
 
-  // Summary stats
-  const now = new Date();
-  const monthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  const thisMonth = state.income.filter(i => i.date.startsWith(monthStr)).reduce((s,i) => s + i.amount, 0);
+  const thisMonth = filtered.reduce((s,i) => s + i.amount, 0);
   const allTime = state.income.reduce((s,i) => s + i.amount, 0);
   document.getElementById('income-this-month').textContent = fmt(thisMonth);
   document.getElementById('income-all-time').textContent = fmt(allTime);
 
-  // Income vs expenses this month
-  const monthExpenses = state.expenses.filter(e => e.date.startsWith(monthStr)).reduce((s,e) => s + e.amount, 0);
+  const monthExpenses = state.expenses.filter(e => e.date.startsWith(ms)).reduce((s,e) => s + e.amount, 0);
   const delta = thisMonth - monthExpenses;
   const vsEl = document.getElementById('income-vs-expenses');
   if (thisMonth > 0 || monthExpenses > 0) {
     vsEl.innerHTML = delta >= 0
-      ? `<span class="green">▲ ${fmt(delta)} surplus this month</span>`
-      : `<span class="red">▼ ${fmt(Math.abs(delta))} deficit this month</span>`;
-  } else {
-    vsEl.textContent = '—';
-  }
+      ? `<span class="green">▲ ${fmt(delta)} surplus</span>`
+      : `<span class="red">▼ ${fmt(Math.abs(delta))} deficit</span>`;
+  } else { vsEl.textContent = '—'; }
 }
 
 function updateSummary() {
@@ -2234,22 +2509,18 @@ function updateSummary() {
   const totalDebt = state.debts.reduce((s,x) => s + x.remaining, 0);
   const netWorth = totalSavings + totalAssets - totalDebt;
   document.getElementById('net-worth').textContent = fmt(netWorth);
-  document.getElementById('net-worth').className = 'stat-value ' + (netWorth >= 0 ? 'green' : 'red');
+  document.getElementById('net-worth').className = 'stat-value ' + (netWorth >= 0 ? '' : 'red');
   document.getElementById('net-worth-change').textContent = netWorth >= 0 ? '▲ Positive net worth' : '▼ Negative net worth';
 
-  // Budget / This Month
-  const now = new Date();
-  const monthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const ms = financeMonthStr();
   const totalBudget = state.budgets.reduce((s,x) => s + x.limit, 0);
-  const totalSpent = state.expenses.reduce((s,x) => s + x.amount, 0);
-  const thisMonthIncome = state.income.filter(i => i.date.startsWith(monthStr)).reduce((s,i) => s + i.amount, 0);
-  const thisMonthSpent = state.expenses.filter(e => e.date.startsWith(monthStr)).reduce((s,e) => s + e.amount, 0);
+  const thisMonthIncome = state.income.filter(i => i.date.startsWith(ms)).reduce((s,i) => s + i.amount, 0);
+  const thisMonthSpent = state.expenses.filter(e => e.date.startsWith(ms)).reduce((s,e) => s + e.amount, 0);
   const totalBillsMonthly = state.bills.reduce((s,b) => {
     const factor = b.recur === 'Monthly' ? 1 : b.recur === 'Bi-monthly' ? 0.5 : b.recur === 'Quarterly' ? 1/3 : 1/12;
     return s + b.amount * factor;
   }, 0);
 
-  // Prefer income-based remaining if income is logged, else fall back to budget-based
   let remaining, remainingLabel;
   if (thisMonthIncome > 0) {
     remaining = thisMonthIncome - thisMonthSpent;
@@ -2263,18 +2534,16 @@ function updateSummary() {
   }
 
   document.getElementById('budget-remaining').textContent = fmt(Math.abs(remaining));
-  document.getElementById('budget-remaining').className = 'stat-value ' + (remaining >= 0 ? 'green' : 'red');
+  document.getElementById('budget-remaining').className = 'stat-value ' + (remaining >= 0 ? '' : 'red');
   document.getElementById('budget-remaining-label').textContent = remainingLabel;
   document.getElementById('summary-income-label').textContent = `Income: ${fmt(thisMonthIncome)}`;
   document.getElementById('summary-expense-label').textContent = `Spent: ${fmt(thisMonthSpent)}`;
 
   const base = thisMonthIncome > 0 ? thisMonthIncome : totalBudget;
-  const effectiveSpent = thisMonthSpent;
-  const pct = base > 0 ? Math.min(100, (effectiveSpent / base) * 100) : (totalBillsMonthly > 0 ? 50 : 0);
+  const pct = base > 0 ? Math.min(100, (thisMonthSpent / base) * 100) : (totalBillsMonthly > 0 ? 50 : 0);
   document.getElementById('budget-bar').style.width = pct + '%';
   document.getElementById('budget-bar').className = 'progress-fill ' + (pct > 90 ? 'fill-red' : pct > 70 ? 'fill-yellow' : 'fill-accent');
 
-  // Debt
   document.getElementById('total-debt').textContent = fmt(totalDebt);
   const totalOriginal = state.debts.reduce((s,x) => s + x.total, 0);
   const totalPaid = totalOriginal - totalDebt;
@@ -2518,82 +2787,26 @@ function clearFields(ids) {
 
 // ═══════════════════ RPG EXTRAS ═══════════════════
 
-// Particles
-(function() {
-  const container = document.getElementById('particles');
-  for (let i = 0; i < 25; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.style.setProperty('--dur', (8 + Math.random() * 12) + 's');
-    p.style.setProperty('--delay', (Math.random() * 10) + 's');
-    p.style.setProperty('--drift', (Math.random() * 60 - 30) + 'px');
-    p.style.left = (Math.random() * 100) + '%';
-    p.style.bottom = '0';
-    container.appendChild(p);
-  }
-})();
+
 
 // Loot Toast
 function showLoot(msg) {
   const t = document.getElementById('loot-toast');
-  t.innerHTML = '<span class="toast-icon">✨</span>' + msg;
+  t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3500);
 }
 
-// Level & HUD system
-function updateHUD() {
-  const totalIncome = state.income.reduce((s,i) => s + i.amount, 0);
-  const totalWorkouts = state.workouts.length;
-  const totalSavings = state.savings.reduce((s,x) => s + x.current, 0);
-  const totalFoods = state.foods.length;
 
-  // XP = actions taken across all categories
-  const xpPoints = state.expenses.length + state.income.length + totalWorkouts + state.foods.length + state.events.length + state.bills.length;
-  const xpPerLevel = 20;
-  const level = Math.floor(xpPoints / xpPerLevel) + 1;
-  const xpProgress = ((xpPoints % xpPerLevel) / xpPerLevel) * 100;
 
-  // HP = health score based on workout streak + days active
-  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
-  const weekWorkouts = state.workouts.filter(w => new Date(w.date) >= weekAgo).length;
-  const hp = Math.min(100, 40 + weekWorkouts * 10);
 
-  // MP = financial health — net worth positive, bills paid, etc.
-  const totalDebt = state.debts.reduce((s,x) => s + x.remaining, 0);
-  const totalAssets = state.assets.reduce((s,x) => s + x.value, 0);
-  const netWorthPositive = (totalSavings + totalAssets - totalDebt) > 0;
-  const paidBillsRatio = state.bills.length > 0
-    ? state.bills.filter(b => b.paidMonths.includes(billMonthKey(b))).length / state.bills.length
-    : 0.5;
-  const mp = Math.min(100, Math.round(30 + (netWorthPositive ? 30 : 0) + paidBillsRatio * 40));
-
-  document.getElementById('hud-hp').style.width = hp + '%';
-  document.getElementById('hud-hp-val').textContent = hp;
-  document.getElementById('hud-mp').style.width = mp + '%';
-  document.getElementById('hud-mp-val').textContent = mp;
-  document.getElementById('hud-xp').style.width = xpProgress + '%';
-  document.getElementById('hud-xp-val').textContent = Math.round(xpProgress) + '%';
-  document.getElementById('player-level').textContent = 'LVL ' + level;
-
-  state._level = state._level || 1;
-  if (level > state._level) {
-    state._level = level;
-    showLoot('⬆ LEVEL UP! You are now Level ' + level);
-  }
-  state._level = level;
-}
-
-// Patch all mutating functions to also call updateHUD
-const _origUpdateSummary = updateSummary;
-updateSummary = function() { _origUpdateSummary(); updateHUD(); };
 
 // Patch addExpense to show loot toast
 const _origAddExpense = addExpense;
 addExpense = function() {
   const prevLen = state.expenses.length;
   _origAddExpense();
-  if (state.expenses.length > prevLen) showLoot('💰 Gold spent recorded');
+  if (state.expenses.length > prevLen) showLoot('Expense logged');
 };
 
 const _origAddIncome = addIncome;
@@ -2602,32 +2815,255 @@ addIncome = function() {
   _origAddIncome();
   if (state.income.length > prevLen) {
     const last = state.income[state.income.length-1];
-    showLoot('🪙 +' + last.amount.toLocaleString('en-US', {minimumFractionDigits:2}) + ' GP earned!');
-    updateHUD();
-  }
+    showLoot('+$' + last.amount.toLocaleString('en-US', {minimumFractionDigits:2}) + ' income logged');
+      }
 };
 
 const _origAddWorkout = addWorkout;
 addWorkout = function() {
   const prevLen = state.workouts.length;
   _origAddWorkout();
-  if (state.workouts.length > prevLen) { showLoot('⚔ Training session logged! +XP'); updateHUD(); }
+  if (state.workouts.length > prevLen) { showLoot('Workout logged'); }
 };
 
 const _origAddSaving = addSaving;
 addSaving = function() {
   const prevLen = state.savings.length;
   _origAddSaving();
-  if (state.savings.length > prevLen) { showLoot('🏆 Treasure vault established!'); updateHUD(); }
+  if (state.savings.length > prevLen) { showLoot('Savings goal added'); }
 };
 
 const _origAddEvent = addEvent;
 addEvent = function() {
   const prevLen = state.events.length;
   _origAddEvent();
-  if (state.events.length > prevLen) { showLoot('📜 Quest accepted!'); updateHUD(); }
+  if (state.events.length > prevLen) { showLoot('Event added'); }
 };
 
+
+// ═══════════════════ YEAR OVERVIEW ═══════════════════
+
+function renderYearOverview() {
+  const yr = yearView.year;
+  document.getElementById('year-label').textContent = yr;
+  document.getElementById('year-subtitle').textContent = `Financial summary for ${yr}`;
+
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const monthData = MONTHS.map((name, m) => {
+    const key = `${yr}-${String(m+1).padStart(2,'0')}`;
+    const income   = state.income.filter(i => i.date.startsWith(key)).reduce((s,i) => s + i.amount, 0);
+    const expenses = state.expenses.filter(e => e.date.startsWith(key)).reduce((s,e) => s + e.amount, 0);
+    const bills    = state.bills.filter(b => b.paidMonths.some(p => p === key)).reduce((s,b) => s + b.amount, 0);
+    return { name, key, income, expenses, bills };
+  });
+
+  // Annual totals
+  const totalIncome  = monthData.reduce((s,m) => s + m.income, 0);
+  const totalSpent   = monthData.reduce((s,m) => s + m.expenses, 0);
+  const totalBills   = monthData.reduce((s,m) => s + m.bills, 0);
+  const surplus      = totalIncome - totalSpent;
+  document.getElementById('year-income').textContent  = fmt(totalIncome);
+  document.getElementById('year-spent').textContent   = fmt(totalSpent);
+  document.getElementById('year-surplus').textContent = fmt(Math.abs(surplus));
+  document.getElementById('year-surplus').className   = 'stat-value ' + (surplus >= 0 ? '' : 'red');
+  document.getElementById('year-surplus-label').textContent = surplus >= 0 ? 'Surplus — great work!' : 'Deficit — expenses exceed income';
+
+  // ── Area + Line chart ─────────────────────────────────
+  const canvas = document.getElementById('year-bar-chart');
+  const parent = canvas.parentElement;
+  canvas.width  = parent.offsetWidth  || 600;
+  canvas.height = parent.offsetHeight || 220;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const PAD = { top: 24, right: 20, bottom: 36, left: 58 };
+  const chartW = W - PAD.left - PAD.right;
+  const chartH = H - PAD.top - PAD.bottom;
+
+  ctx.clearRect(0, 0, W, H);
+
+  const maxVal = Math.max(...monthData.flatMap(m => [m.income, m.expenses]), 1);
+  const step = chartW / 11; // 12 points, 11 intervals
+
+  // Helper: get x/y for a data point
+  const px = i => PAD.left + i * step;
+  const py = v => PAD.top + chartH - (v / maxVal) * chartH;
+
+  // Helper: smooth bezier curve through points
+  function drawSmooth(points, stroke, fill1, fill2) {
+    if (points.length < 2) return;
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 0; i < points.length - 1; i++) {
+      const cp1x = (points[i].x + points[i+1].x) / 2;
+      const cp1y = points[i].y;
+      const cp2x = (points[i].x + points[i+1].x) / 2;
+      const cp2y = points[i+1].y;
+      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, points[i+1].x, points[i+1].y);
+    }
+    // Area fill
+    if (fill1) {
+      ctx.lineTo(points[points.length-1].x, PAD.top + chartH);
+      ctx.lineTo(points[0].x, PAD.top + chartH);
+      ctx.closePath();
+      const grad = ctx.createLinearGradient(0, PAD.top, 0, PAD.top + chartH);
+      grad.addColorStop(0, fill1);
+      grad.addColorStop(1, fill2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+    }
+    // Redraw stroke only
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 0; i < points.length - 1; i++) {
+      const cp1x = (points[i].x + points[i+1].x) / 2;
+      const cp1y = points[i].y;
+      const cp2x = (points[i].x + points[i+1].x) / 2;
+      const cp2y = points[i+1].y;
+      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, points[i+1].x, points[i+1].y);
+    }
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+  }
+
+  // Gridlines + Y-axis labels
+  ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = PAD.top + chartH - (i / 4) * chartH;
+    ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + chartW, y); ctx.stroke();
+    ctx.fillStyle = 'rgba(0,0,0,0.32)';
+    ctx.font = '10px Figtree, sans-serif';
+    ctx.textAlign = 'right';
+    const val = maxVal * i / 4;
+    ctx.fillText(val >= 1000 ? '$' + (val/1000).toFixed(0) + 'k' : '$' + val.toFixed(0), PAD.left - 6, y + 3);
+  }
+
+  // Income area (draw first, behind)
+  const incPts = monthData.map((m,i) => ({ x: px(i), y: py(m.income) }));
+  drawSmooth(incPts, 'rgba(52,199,89,0.9)', 'rgba(52,199,89,0.18)', 'rgba(52,199,89,0.01)');
+
+  // Expense area (draw on top)
+  const expPts = monthData.map((m,i) => ({ x: px(i), y: py(m.expenses) }));
+  drawSmooth(expPts, 'rgba(255,59,48,0.85)', 'rgba(255,59,48,0.14)', 'rgba(255,59,48,0.01)');
+
+  // Running balance line (no fill)
+  let bal = 0;
+  const minB = monthData.reduce((acc, m) => { bal += m.income - m.expenses; return Math.min(acc, bal); }, 0);
+  const maxB = monthData.reduce((acc, m, i) => { return Math.max(acc, monthData.slice(0,i+1).reduce((s,mm) => s + mm.income - mm.expenses, 0)); }, 0);
+  const rangeB = Math.max(maxB - minB, 1);
+  bal = 0;
+  const balPts = monthData.map((m, i) => {
+    bal += m.income - m.expenses;
+    const y = PAD.top + chartH - ((bal - minB) / rangeB) * chartH * 0.72 - chartH * 0.1;
+    return { x: px(i), y };
+  });
+  // Balance line (no area)
+  ctx.beginPath();
+  ctx.moveTo(balPts[0].x, balPts[0].y);
+  for (let i = 0; i < balPts.length - 1; i++) {
+    const cpx = (balPts[i].x + balPts[i+1].x) / 2;
+    ctx.bezierCurveTo(cpx, balPts[i].y, cpx, balPts[i+1].y, balPts[i+1].x, balPts[i+1].y);
+  }
+  ctx.strokeStyle = 'rgba(0,122,255,0.75)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5,4]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Dots on all three lines
+  [[incPts, 'rgba(52,199,89,1)'], [expPts, 'rgba(255,59,48,1)'], [balPts, 'rgba(0,122,255,1)']].forEach(([pts, color]) => {
+    pts.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+    });
+  });
+
+  // Month labels
+  monthData.forEach((m, i) => {
+    ctx.fillStyle = 'rgba(0,0,0,0.38)';
+    ctx.font = '10px Figtree, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(m.name, px(i), H - PAD.bottom + 14);
+  });
+
+  // ── Top categories ────────────────────────────────────
+  const catTotals = {};
+  state.expenses.filter(e => e.date.startsWith(`${yr}-`)).forEach(e => {
+    const k = e.cat || 'Uncategorized';
+    catTotals[k] = (catTotals[k] || 0) + e.amount;
+  });
+  const sorted = Object.entries(catTotals).sort((a,b) => b[1]-a[1]).slice(0, 6);
+  const maxCat = sorted[0]?.[1] || 1;
+  const COLORS = ['fill-red','fill-blue','fill-purple','fill-yellow','fill-green','fill-accent'];
+  const catEl = document.getElementById('year-categories');
+  if (!sorted.length) {
+    catEl.innerHTML = '<div class="empty"><span class="empty-icon">📊</span>No expense data for this year</div>';
+  } else {
+    catEl.innerHTML = sorted.map(([cat, amt], i) => `
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span style="font-weight:500">${cat}</span>
+          <span style="color:var(--text-3)">${fmt(amt)}</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill ${COLORS[i % COLORS.length]}" style="width:${(amt/maxCat)*100}%"></div>
+        </div>
+      </div>`).join('');
+  }
+
+  // ── Bills paid summary ────────────────────────────────
+  const billsEl = document.getElementById('year-bills-summary');
+  const paidBills = state.bills.filter(b => b.paidMonths.some(p => p.startsWith(`${yr}-`)));
+  if (!paidBills.length) {
+    billsEl.innerHTML = '<div class="empty"><span class="empty-icon">💸</span>No bills paid this year</div>';
+  } else {
+    const billsByName = {};
+    paidBills.forEach(b => {
+      const months = b.paidMonths.filter(p => p.startsWith(`${yr}-`)).length;
+      billsByName[b.name] = (billsByName[b.name] || 0) + b.amount * months;
+    });
+    billsEl.innerHTML = Object.entries(billsByName)
+      .sort((a,b) => b[1]-a[1])
+      .map(([name, amt]) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid var(--border);font-size:13px">
+          <span style="font-weight:500">${name}</span>
+          <span style="font-weight:600;color:var(--red)">${fmt(amt)}</span>
+        </div>`).join('') +
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 0;font-size:13px;font-weight:700">
+        <span>Total</span><span style="color:var(--red)">${fmt(totalBills)}</span>
+      </div>`;
+  }
+
+  // ── Month-by-month table ──────────────────────────────
+  let runBalance = 0;
+  const now = new Date();
+  document.getElementById('year-month-body').innerHTML = monthData.map(m => {
+    runBalance += m.income - m.expenses;
+    const net = m.income - m.expenses;
+    const savRate = m.income > 0 ? Math.round((net / m.income) * 100) : null;
+    const isFuture = `${yr}-${String(MONTHS.indexOf(m.name)+1).padStart(2,'0')}` > `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const rowStyle = isFuture ? 'opacity:0.4' : '';
+    return `<tr style="${rowStyle}">
+      <td style="font-weight:600">${m.name}</td>
+      <td style="color:var(--green);font-weight:500">${m.income > 0 ? fmt(m.income) : '—'}</td>
+      <td style="color:var(--red);font-weight:500">${m.expenses > 0 ? fmt(m.expenses) : '—'}</td>
+      <td style="color:var(--text-3)">${m.bills > 0 ? fmt(m.bills) : '—'}</td>
+      <td style="font-weight:600;color:${net >= 0 ? 'var(--green)' : 'var(--red)'}">${m.income > 0 || m.expenses > 0 ? fmt(net) : '—'}</td>
+      <td>${savRate !== null ? `<span class="tag ${savRate >= 20 ? 'tag-green' : savRate >= 0 ? 'tag-blue' : 'tag-red'}">${savRate}%</span>` : '—'}</td>
+    </tr>`;
+  }).join('') + `<tr style="border-top:2px solid var(--border-mid);font-weight:700">
+    <td>Total</td>
+    <td style="color:var(--green)">${fmt(totalIncome)}</td>
+    <td style="color:var(--red)">${fmt(totalSpent)}</td>
+    <td style="color:var(--text-3)">${fmt(totalBills)}</td>
+    <td style="color:${surplus>=0?'var(--green)':'var(--red)'}">${fmt(surplus)}</td>
+    <td>${totalIncome > 0 ? `<span class="tag ${surplus/totalIncome >= 0.2 ? 'tag-green' : surplus >= 0 ? 'tag-blue' : 'tag-red'}">${Math.round((surplus/totalIncome)*100)}%</span>` : '—'}</td>
+  </tr>`;
+}
 
 // ═══════════════════ FIREBASE PERSISTENCE ═══════════════════
 
@@ -2652,11 +3088,19 @@ function setSyncStatus(status, text) {
     el.textContent = text;
   });
 }
+function dismissLoading() {
+  const ls = document.getElementById('loading-screen');
+  if (!ls) return;
+  ls.classList.add('fade-out');
+  setTimeout(() => ls.style.display = 'none', 320);
+}
 function showAuthScreen() {
+  dismissLoading();
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('app-wrapper').style.display = 'none';
 }
 function showAppScreen() {
+  dismissLoading();
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app-wrapper').style.display = 'block';
 }
@@ -2694,7 +3138,7 @@ function loadFirebaseScripts() {
       if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
       const s = document.createElement('script');
       s.src = src;
-      s.onload = () => { console.log('Loaded:', src); resolve(); };
+      s.onload = () => { resolve(); };
       s.onerror = () => reject(new Error('Failed to load: ' + src));
       document.head.appendChild(s);
     }));
@@ -2725,7 +3169,7 @@ async function initFirebase(config) {
       showAppScreen();
       setSyncStatus('loading', '… Loading');
       await firebaseLoadNow();
-      showLoot('👤 Signed in as ' + user.email.split('@')[0]);
+      showLoot('Signed in as ' + user.email.split('@')[0]);
     } else {
       FB.user = null;
       FB.docPath = null;
@@ -2764,7 +3208,7 @@ async function authSignOut() {
   const keys = ['budgets','expenses','savings','debts','assets','bills','income','events','workouts','foods'];
   keys.forEach(k => state[k] = []);
   refreshAllViews();
-  showLoot('👋 Signed out');
+  showLoot('Signed out');
 }
 
 async function authResetPassword() {
@@ -2785,7 +3229,7 @@ async function saveFirebaseConfig() {
   const projectId  = document.getElementById('fb-projectId').value.trim();
   const authDomain = document.getElementById('fb-authDomain').value.trim();
   const appId      = document.getElementById('fb-appId').value.trim();
-  const autosave   = document.getElementById('fb-autosave').checked;
+  const autosave   = document.getElementById('fb-autosave').value === '1';
   if (!apiKey || !projectId) { setSyncStatus('error', '✕ Missing fields'); return; }
   const config = { apiKey, projectId, authDomain: authDomain || projectId + '.firebaseapp.com', appId };
   localStorage.setItem(LS_CONFIG_KEY, JSON.stringify(config));
@@ -2795,7 +3239,7 @@ async function saveFirebaseConfig() {
   try {
     await initFirebase(config);
     setSyncStatus('saved', '✓ Connected');
-    showLoot('🔥 Firebase connected!');
+    showLoot('Firebase connected');
     closeModal('modal-settings');
     // Auth screen will show automatically via onAuthStateChanged
   } catch(e) {
@@ -2812,24 +3256,33 @@ function disconnectFirebase() {
     localStorage.removeItem(LS_AUTOSAVE_KEY);
     FB.configured = false;
     setSyncStatus('idle', '⬡ Not connected');
-    showLoot('🔌 Disconnected');
+    showLoot('Disconnected');
   }
 }
 
 function openSettingsModal() {
-  const saved = localStorage.getItem(LS_CONFIG_KEY);
-  const cfg = saved ? JSON.parse(saved) : FIREBASE_CONFIG;
-  try {
-    document.getElementById('fb-apiKey').value     = cfg.apiKey     || '';
-    document.getElementById('fb-projectId').value  = cfg.projectId  || '';
-    document.getElementById('fb-authDomain').value = cfg.authDomain || '';
-    document.getElementById('fb-appId').value      = cfg.appId      || '';
-  } catch(e) {}
-  document.getElementById('fb-autosave').checked = localStorage.getItem(LS_AUTOSAVE_KEY) !== '0';
+  const autosaveOn = localStorage.getItem(LS_AUTOSAVE_KEY) !== '0';
+  document.getElementById('fb-autosave').value = autosaveOn ? '1' : '0';
+  document.getElementById('autosave-toggle').style.background = autosaveOn ? 'var(--blue)' : 'var(--surface3)';
+  document.getElementById('autosave-knob').style.transform = autosaveOn ? 'translateX(18px)' : 'translateX(0)';
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  syncDarkModeToggle(isDark);
   const el = document.getElementById('settings-last-saved');
   if (el) el.textContent = FB.lastSaved ? 'Last saved: ' + FB.lastSaved.toLocaleTimeString() : '';
   if (FB.user) updateUserDisplay();
-  openModal('modal-settings');
+  _origOpenModal('modal-settings');
+}
+
+function toggleAutoSave() {
+  const input = document.getElementById('fb-autosave');
+  const toggle = document.getElementById('autosave-toggle');
+  const knob = document.getElementById('autosave-knob');
+  const on = input.value === '1';
+  input.value = on ? '0' : '1';
+  toggle.style.background = on ? 'var(--surface3)' : 'var(--blue)';
+  knob.style.transform = on ? 'translateX(0)' : 'translateX(18px)';
+  FB.autosave = !on;
+  localStorage.setItem(LS_AUTOSAVE_KEY, on ? '0' : '1');
 }
 
 const _origOpenModal = openModal;
@@ -2840,12 +3293,12 @@ openModal = function(id) {
 
 // ── Data sync ────────────────────────────────────────────
 function serializeState() {
-  const keys = ['budgets','expenses','savings','debts','assets','bills','income','events','workouts','foods'];
+  const keys = ['budgets','expenses','savings','debts','assets','bills','income','events','workouts','foods','cards'];
   const out = {}; keys.forEach(k => out[k] = state[k]); return out;
 }
 
 function deserializeState(data) {
-  const keys = ['budgets','expenses','savings','debts','assets','bills','income','events','workouts','foods'];
+  const keys = ['budgets','expenses','savings','debts','assets','bills','income','events','workouts','foods','cards'];
   keys.forEach(k => { if (data[k]) state[k] = data[k]; });
 }
 
@@ -2890,13 +3343,12 @@ function firebaseQueueSave() {
 }
 
 function refreshAllViews() {
-  renderBudgets(); renderExpenses(); updateExpenseCategorySelect();
+  renderBudgets(); renderExpenses(); updateExpenseCategorySelect(); updateCardSelects();
   renderSavings(); renderDebts(); renderAssets(); renderIncome();
-  renderBills(); renderEvents(); renderCalendar();
+  renderCards(); renderBills(); renderEvents(); renderCalendar();
   renderWorkouts(); updateHealthSummary();
   renderFoods(); renderMealSlots(); updateNutritionSummary();
-  updateSummary(); updateHUD();
-  checkAndAutoLogBills();
+  updateSummary(); checkAndAutoLogBills();
 }
 
 // Patch mutating functions to auto-save
@@ -2907,7 +3359,7 @@ function patchForSync(fnName) {
 }
 ['addBudgetCategory','addExpense','addSaving','updateSaving','addDebt','makePayment',
  'addAsset','updateAsset','addIncome','addBill','markBillPaid','removeBill',
- 'addEvent','addWorkout','addFood','removeItem'].forEach(patchForSync);
+ 'addEvent','addWorkout','addFood','addCard','removeItem'].forEach(patchForSync);
 
 // Hard-coded Firebase config
 const FIREBASE_CONFIG = {
@@ -2920,30 +3372,29 @@ const FIREBASE_CONFIG = {
 };
 
 async function autoConnectFirebase() {
-  // Always use hard-coded config; fall back to localStorage override if present
-  const saved = localStorage.getItem(LS_CONFIG_KEY);
-  const cfg = saved ? JSON.parse(saved) : FIREBASE_CONFIG;
+  const cfg = FIREBASE_CONFIG;
   FB.autosave = localStorage.getItem(LS_AUTOSAVE_KEY) !== '0';
   setSyncStatus('loading', '… Connecting');
   try {
     await initFirebase(cfg);
-    // onAuthStateChanged will show auth or app screen
   } catch(e) {
-    setSyncStatus('error', '✕ Auto-connect failed');
+    setSyncStatus('error', '✕ Connection failed');
     showAuthScreen();
-    console.error(e);
+    console.error('Firebase init error:', e);
   }
 }
 
 // ── INIT ─────────────────────────────────────────────────
 renderCalendar();
 renderMealSlots();
+renderCards();
+updateCardSelects();
+updateFinanceMonthLabel();
 document.getElementById('e-date').value = today();
 document.getElementById('ev-date').value = today();
 document.getElementById('w-date').value = today();
 document.getElementById('i-date').value = today();
 checkAndAutoLogBills();
-updateHUD();
 autoConnectFirebase();
 
 </script>
