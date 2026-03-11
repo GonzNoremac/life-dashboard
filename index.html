@@ -1110,17 +1110,25 @@ tr:hover td { background: var(--surface2); }
       </div>
     </div>
     <div class="card">
-      <div class="card-title">
-        Expenses
-        <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-expense')">+ Add</button>
+      <div class="card-title" style="cursor:pointer;user-select:none" onclick="toggleExpenses()">
+        <span style="display:flex;align-items:center;gap:0.5rem">
+          Expenses
+          <span id="expense-count-badge" style="font-size:11px;font-weight:600;color:var(--text-4);background:var(--surface2);padding:1px 7px;border-radius:20px;border:1px solid var(--border)">0</span>
+        </span>
+        <span style="display:flex;align-items:center;gap:0.5rem">
+          <button class="btn btn-sm btn-primary" onclick="event.stopPropagation();openModal('modal-add-expense')">+ Add</button>
+          <span id="expense-collapse-icon" style="font-size:12px;color:var(--text-4);transition:transform 0.2s;display:inline-block">▾</span>
+        </span>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Card</th><th>Amount</th><th></th></tr></thead>
-          <tbody id="expense-body">
-            <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-4)">No expenses logged</td></tr>
-          </tbody>
-        </table>
+      <div id="expense-collapsible" style="overflow:hidden;transition:max-height 0.3s ease, opacity 0.2s ease;max-height:2000px;opacity:1">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Card</th><th>Amount</th><th></th></tr></thead>
+            <tbody id="expense-body">
+              <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-4)">No expenses logged</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -2434,10 +2442,24 @@ function addExpense() {
   renderExpenses(); renderBudgets(); renderIncome(); renderCards(); updateSummary();
 }
 
+function toggleExpenses() {
+  const el   = document.getElementById('expense-collapsible');
+  const icon = document.getElementById('expense-collapse-icon');
+  const collapsed = el.style.maxHeight === '0px';
+  el.style.maxHeight = collapsed ? '2000px' : '0px';
+  el.style.opacity   = collapsed ? '1' : '0';
+  icon.style.transform = collapsed ? 'rotate(0deg)' : 'rotate(-90deg)';
+}
+
 function renderExpenses() {
   const body = document.getElementById('expense-body');
   const ms = financeMonthStr();
   const filtered = state.expenses.filter(e => e.date.startsWith(ms));
+
+  // Update count badge
+  const badge = document.getElementById('expense-count-badge');
+  if (badge) badge.textContent = filtered.length;
+
   if (!filtered.length) { body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-4)">No expenses for this month</td></tr>'; return; }
   const sorted = [...filtered].sort((a,b) => b.date.localeCompare(a.date));
   body.innerHTML = sorted.map(e => {
