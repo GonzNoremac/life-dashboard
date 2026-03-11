@@ -1109,19 +1109,17 @@ tr:hover td { background: var(--surface2); }
         <div class="empty"><span class="empty-icon">📊</span>No budget categories yet</div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-title" style="cursor:pointer;user-select:none" onclick="toggleExpenses()">
+    <div class="card" style="display:flex;flex-direction:column">
+      <div class="card-title">
+        Expenses
         <span style="display:flex;align-items:center;gap:0.5rem">
-          Expenses
           <span id="expense-count-badge" style="font-size:11px;font-weight:600;color:var(--text-4);background:var(--surface2);padding:1px 7px;border-radius:20px;border:1px solid var(--border)">0</span>
-        </span>
-        <span style="display:flex;align-items:center;gap:0.5rem">
-          <button class="btn btn-sm btn-primary" onclick="event.stopPropagation();openModal('modal-add-expense')">+ Add</button>
-          <span id="expense-collapse-icon" style="font-size:12px;color:var(--text-4);transition:transform 0.2s;display:inline-block">▾</span>
+          <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-expense')">+ Add</button>
         </span>
       </div>
-      <div id="expense-collapsible" style="overflow:hidden;transition:max-height 0.3s ease, opacity 0.2s ease;max-height:2000px;opacity:1">
-        <div class="table-wrap">
+      <!-- Table clipped to preview height -->
+      <div style="position:relative;flex:1">
+        <div id="expense-table-wrap" class="table-wrap" style="max-height:320px;overflow:hidden;transition:max-height 0.35s ease">
           <table>
             <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Card</th><th>Amount</th><th></th></tr></thead>
             <tbody id="expense-body">
@@ -1129,7 +1127,16 @@ tr:hover td { background: var(--surface2); }
             </tbody>
           </table>
         </div>
+        <!-- Gradient fade — hidden when expanded -->
+        <div id="expense-fade" style="position:absolute;bottom:0;left:0;right:0;height:64px;background:linear-gradient(to bottom, transparent, var(--surface));pointer-events:none;transition:opacity 0.2s"></div>
       </div>
+      <!-- See more / See less button -->
+      <div id="expense-see-more" style="text-align:center;padding-top:0.5rem;display:none">
+        <button class="btn btn-ghost btn-sm" style="width:100%;font-size:12px" onclick="toggleExpenseExpand()">
+          <span id="expense-see-more-label">See more</span>
+        </button>
+      </div>
+    </div>
     </div>
   </div>
 
@@ -2054,98 +2061,121 @@ tr:hover td { background: var(--surface2); }
       <input type="hidden" id="fb-autosave" value="1">
     </div>
 
-    <!-- CHANGELOG -->
+    <!-- CHANGELOG BUTTON -->
     <div class="settings-section">
-      <div class="settings-section-title" style="display:flex;align-items:center;justify-content:space-between">
-        Changelog
-        <span style="font-size:10px;font-weight:600;color:var(--accent);background:var(--accent-light);padding:2px 8px;border-radius:20px;letter-spacing:0.05em">v2.0 · Mar 2026</span>
-      </div>
-
-      <!-- Session 2 — current -->
-      <div style="margin-bottom:1rem">
-        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
-          <span style="font-size:11px;font-weight:700;color:var(--text);font-family:'DM Mono',monospace">Mar 6, 2026</span>
-          <span style="font-size:10px;font-weight:600;color:var(--green);background:var(--green-light);padding:1px 7px;border-radius:20px">Latest</span>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:0.4rem">
-          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
-            <span style="color:var(--blue);font-weight:700;flex-shrink:0;margin-top:1px">💧</span>
-            <span style="color:var(--text-2)"><strong>Water Tracker</strong> — daily intake log with +8/16/32oz quick-add buttons, custom amount modal, goal setting, and per-entry delete</span>
-          </div>
-          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
-            <span style="color:var(--red);font-weight:700;flex-shrink:0;margin-top:1px">🔄</span>
-            <span style="color:var(--text-2)"><strong>Bills Rework</strong> — bills now have per-month due dates instead of a raw day number; Mark Paid / Undo work per any viewed month; recurrence awareness hides bills in off-cycle months</span>
-          </div>
-          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
-            <span style="color:var(--accent);font-weight:700;flex-shrink:0;margin-top:1px">✏️</span>
-            <span style="color:var(--text-2)"><strong>Edit Everything</strong> — ••• context menu on every row across all sections; reuses existing modals pre-filled with current values</span>
-          </div>
-          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
-            <span style="color:var(--green);font-weight:700;flex-shrink:0;margin-top:1px">📊</span>
-            <span style="color:var(--text-2)"><strong>Budget Totals Bar</strong> — live Budgeted / Spent / Left summary with color-coded progress bar at the top of Budget Categories</span>
-          </div>
-          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
-            <span style="color:var(--blue);font-weight:700;flex-shrink:0;margin-top:1px">⚖️</span>
-            <span style="color:var(--text-2)"><strong>Balance Tracker</strong> — "This Month" card now shows Income − All Expenses (including paid bills) with a live progress bar</span>
-          </div>
-          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
-            <span style="color:var(--orange);font-weight:700;flex-shrink:0;margin-top:1px">🐛</span>
-            <span style="color:var(--text-2)"><strong>Year Overview Fix</strong> — eliminated double-counting of bills in annual totals, chart, and month-by-month table; Expenses and Bills Paid columns now correctly separate</span>
-          </div>
-          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
-            <span style="color:var(--orange);font-weight:700;flex-shrink:0;margin-top:1px">🐛</span>
-            <span style="color:var(--text-2)"><strong>Autopay + Persistence Fix</strong> — full state now persists to localStorage on every change; autopay correctly fires against restored data on page reload</span>
-          </div>
-          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
-            <span style="color:var(--red);font-weight:700;flex-shrink:0;margin-top:1px">🎨</span>
-            <span style="color:var(--text-2)"><strong>Total Debt card</strong> — changed from green to red gradient to better reflect its meaning</span>
-          </div>
-        </div>
-      </div>
-
-      <div style="height:1px;background:var(--border);margin-bottom:1rem"></div>
-
-      <!-- Session 1 — previous -->
-      <div>
-        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
-          <span style="font-size:11px;font-weight:700;color:var(--text);font-family:'DM Mono',monospace">Mar 5, 2026</span>
-          <span style="font-size:10px;font-weight:600;color:var(--text-4);background:var(--surface2);padding:1px 7px;border-radius:20px">Previous</span>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:0.4rem">
-          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
-            <span style="color:var(--accent);font-weight:700;flex-shrink:0;margin-top:1px">🎨</span>
-            <span style="color:var(--text-2)"><strong>Fintech Redesign</strong> — Bloomberg/Robinhood aesthetic; DM Sans + DM Mono fonts; indigo accent; squared card borders with left-border hover</span>
-          </div>
-          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
-            <span style="color:var(--blue);font-weight:700;flex-shrink:0;margin-top:1px">🌙</span>
-            <span style="color:var(--text-2)"><strong>Dark Mode</strong> — true near-black theme toggled via Settings; persists across sessions; applied before render to prevent flash</span>
-          </div>
-          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
-            <span style="color:var(--green);font-weight:700;flex-shrink:0;margin-top:1px">📅</span>
-            <span style="color:var(--text-2)"><strong>Finance Month Filter</strong> — ‹ March 2026 › navigator on Finance page; all cards, budgets, expenses, income, and bills filter by selected month</span>
-          </div>
-          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
-            <span style="color:var(--purple);font-weight:700;flex-shrink:0;margin-top:1px">📈</span>
-            <span style="color:var(--text-2)"><strong>Year Overview tab</strong> — smooth bezier area chart, top spending categories, bills paid summary, month-by-month table with savings rate</span>
-          </div>
-          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
-            <span style="color:var(--red);font-weight:700;flex-shrink:0;margin-top:1px">💳</span>
-            <span style="color:var(--text-2)"><strong>Credit Card Tracking</strong> — card management with color chips; card selector on expenses and bills; monthly and all-time spend per card</span>
-          </div>
-          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
-            <span style="color:var(--orange);font-weight:700;flex-shrink:0;margin-top:1px">📱</span>
-            <span style="color:var(--text-2)"><strong>Mobile Responsive</strong> — fixed bottom tab bar on phones, bottom-sheet modals, collapsed grids; three breakpoints (768 / 480 / 360px)</span>
-          </div>
-          <div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:12px">
-            <span style="color:var(--blue);font-weight:700;flex-shrink:0;margin-top:1px">☁️</span>
-            <span style="color:var(--text-2)"><strong>Firebase Auth + Sync</strong> — email/password login, Firestore persistence, auto-save toggle, sync status pill in nav</span>
-          </div>
-        </div>
-      </div>
+      <div class="settings-section-title">About</div>
+      <button class="btn btn-ghost" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem" onclick="closeModal('modal-settings');openModal('modal-changelog')">
+        <span style="display:flex;align-items:center;gap:0.6rem">
+          <span style="font-size:15px">📋</span>
+          <span style="font-size:13px;font-weight:600;color:var(--text)">Changelog</span>
+        </span>
+        <span style="display:flex;align-items:center;gap:0.5rem">
+          <span style="font-size:10px;font-weight:700;color:var(--accent);background:var(--accent-light);padding:2px 8px;border-radius:20px;letter-spacing:0.05em">v2.0 · Mar 2026</span>
+          <span style="color:var(--text-4);font-size:12px">›</span>
+        </span>
+      </button>
     </div>
 
     <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:0.5rem">
       <button class="btn btn-primary" onclick="closeModal('modal-settings')">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGELOG MODAL -->
+<div class="modal-overlay" id="modal-changelog">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal('modal-changelog')">✕</button>
+    <div class="modal-title" style="display:flex;align-items:center;justify-content:space-between">
+      Changelog
+      <span style="font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-light);padding:3px 10px;border-radius:20px;letter-spacing:0.05em">v2.0 · Mar 2026</span>
+    </div>
+
+    <!-- Session 2 — current -->
+    <div style="margin-bottom:1.25rem">
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.65rem">
+        <span style="font-size:12px;font-weight:700;color:var(--text);font-family:'DM Mono',monospace">Mar 6, 2026</span>
+        <span style="font-size:10px;font-weight:700;color:var(--green);background:var(--green-light);padding:2px 8px;border-radius:20px">Latest</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.55rem">
+        <div style="display:flex;gap:0.6rem;align-items:flex-start">
+          <span style="font-size:15px;flex-shrink:0;line-height:1.4">💧</span>
+          <div><span style="font-size:13px;font-weight:600;color:var(--text)">Water Tracker</span><br><span style="font-size:12px;color:var(--text-3)">Daily intake log with +8/16/32oz quick-add, custom amount, goal setting, and per-entry delete</span></div>
+        </div>
+        <div style="display:flex;gap:0.6rem;align-items:flex-start">
+          <span style="font-size:15px;flex-shrink:0;line-height:1.4">🔄</span>
+          <div><span style="font-size:13px;font-weight:600;color:var(--text)">Bills Rework</span><br><span style="font-size:12px;color:var(--text-3)">Per-month due dates; Mark Paid / Undo per any viewed month; recurrence awareness hides off-cycle bills</span></div>
+        </div>
+        <div style="display:flex;gap:0.6rem;align-items:flex-start">
+          <span style="font-size:15px;flex-shrink:0;line-height:1.4">✏️</span>
+          <div><span style="font-size:13px;font-weight:600;color:var(--text)">Edit Everything</span><br><span style="font-size:12px;color:var(--text-3)">••• context menu on every row across all sections; pre-fills existing modals for editing</span></div>
+        </div>
+        <div style="display:flex;gap:0.6rem;align-items:flex-start">
+          <span style="font-size:15px;flex-shrink:0;line-height:1.4">📊</span>
+          <div><span style="font-size:13px;font-weight:600;color:var(--text)">Budget Totals Bar</span><br><span style="font-size:12px;color:var(--text-3)">Live Budgeted / Spent / Left summary with color-coded progress bar in Budget Categories</span></div>
+        </div>
+        <div style="display:flex;gap:0.6rem;align-items:flex-start">
+          <span style="font-size:15px;flex-shrink:0;line-height:1.4">⚖️</span>
+          <div><span style="font-size:13px;font-weight:600;color:var(--text)">Balance Tracker</span><br><span style="font-size:12px;color:var(--text-3)">"This Month" card shows Income − All Expenses including paid bills, with live progress bar</span></div>
+        </div>
+        <div style="display:flex;gap:0.6rem;align-items:flex-start">
+          <span style="font-size:15px;flex-shrink:0;line-height:1.4">🐛</span>
+          <div><span style="font-size:13px;font-weight:600;color:var(--text)">Year Overview Fix</span><br><span style="font-size:12px;color:var(--text-3)">Eliminated double-counting of bills; Expenses and Bills Paid now correctly separated throughout</span></div>
+        </div>
+        <div style="display:flex;gap:0.6rem;align-items:flex-start">
+          <span style="font-size:15px;flex-shrink:0;line-height:1.4">🐛</span>
+          <div><span style="font-size:13px;font-weight:600;color:var(--text)">Autopay + Persistence Fix</span><br><span style="font-size:12px;color:var(--text-3)">Full state persists to localStorage on every change; autopay fires correctly on reload</span></div>
+        </div>
+        <div style="display:flex;gap:0.6rem;align-items:flex-start">
+          <span style="font-size:15px;flex-shrink:0;line-height:1.4">🎨</span>
+          <div><span style="font-size:13px;font-weight:600;color:var(--text)">Visual Updates</span><br><span style="font-size:12px;color:var(--text-3)">Total Debt card changed to red; Expenses table collapses with See more / See less</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:1px;background:var(--border);margin:0.25rem 0 1.25rem"></div>
+
+    <!-- Session 1 — previous -->
+    <div>
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.65rem">
+        <span style="font-size:12px;font-weight:700;color:var(--text);font-family:'DM Mono',monospace">Mar 5, 2026</span>
+        <span style="font-size:10px;font-weight:700;color:var(--text-4);background:var(--surface2);padding:2px 8px;border-radius:20px;border:1px solid var(--border)">v1.0</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.55rem">
+        <div style="display:flex;gap:0.6rem;align-items:flex-start">
+          <span style="font-size:15px;flex-shrink:0;line-height:1.4">🎨</span>
+          <div><span style="font-size:13px;font-weight:600;color:var(--text)">Fintech Redesign</span><br><span style="font-size:12px;color:var(--text-3)">Bloomberg/Robinhood aesthetic; DM Sans + DM Mono; indigo accent; squared card borders</span></div>
+        </div>
+        <div style="display:flex;gap:0.6rem;align-items:flex-start">
+          <span style="font-size:15px;flex-shrink:0;line-height:1.4">🌙</span>
+          <div><span style="font-size:13px;font-weight:600;color:var(--text)">Dark Mode</span><br><span style="font-size:12px;color:var(--text-3)">True near-black theme, persisted to localStorage, applied before render to prevent flash</span></div>
+        </div>
+        <div style="display:flex;gap:0.6rem;align-items:flex-start">
+          <span style="font-size:15px;flex-shrink:0;line-height:1.4">📅</span>
+          <div><span style="font-size:13px;font-weight:600;color:var(--text)">Finance Month Filter</span><br><span style="font-size:12px;color:var(--text-3)">‹ March 2026 › navigator filters all cards, budgets, expenses, income, and bills</span></div>
+        </div>
+        <div style="display:flex;gap:0.6rem;align-items:flex-start">
+          <span style="font-size:15px;flex-shrink:0;line-height:1.4">📈</span>
+          <div><span style="font-size:13px;font-weight:600;color:var(--text)">Year Overview</span><br><span style="font-size:12px;color:var(--text-3)">Bezier area chart, top categories, bills summary, month-by-month table with savings rate</span></div>
+        </div>
+        <div style="display:flex;gap:0.6rem;align-items:flex-start">
+          <span style="font-size:15px;flex-shrink:0;line-height:1.4">💳</span>
+          <div><span style="font-size:13px;font-weight:600;color:var(--text)">Credit Card Tracking</span><br><span style="font-size:12px;color:var(--text-3)">Card management with color chips; card selector on expenses and bills</span></div>
+        </div>
+        <div style="display:flex;gap:0.6rem;align-items:flex-start">
+          <span style="font-size:15px;flex-shrink:0;line-height:1.4">📱</span>
+          <div><span style="font-size:13px;font-weight:600;color:var(--text)">Mobile Responsive</span><br><span style="font-size:12px;color:var(--text-3)">Fixed bottom tab bar, bottom-sheet modals, three breakpoints (768 / 480 / 360px)</span></div>
+        </div>
+        <div style="display:flex;gap:0.6rem;align-items:flex-start">
+          <span style="font-size:15px;flex-shrink:0;line-height:1.4">☁️</span>
+          <div><span style="font-size:13px;font-weight:600;color:var(--text)">Firebase Auth + Sync</span><br><span style="font-size:12px;color:var(--text-3)">Email/password login, Firestore persistence, auto-save toggle, sync status pill in nav</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:1.5rem;display:flex;justify-content:flex-end">
+      <button class="btn btn-primary" onclick="closeModal('modal-changelog')">Close</button>
     </div>
   </div>
 </div>
@@ -2442,13 +2472,35 @@ function addExpense() {
   renderExpenses(); renderBudgets(); renderIncome(); renderCards(); updateSummary();
 }
 
-function toggleExpenses() {
-  const el   = document.getElementById('expense-collapsible');
-  const icon = document.getElementById('expense-collapse-icon');
-  const collapsed = el.style.maxHeight === '0px';
-  el.style.maxHeight = collapsed ? '2000px' : '0px';
-  el.style.opacity   = collapsed ? '1' : '0';
-  icon.style.transform = collapsed ? 'rotate(0deg)' : 'rotate(-90deg)';
+const expenseExpanded = { open: false };
+
+function toggleExpenseExpand() {
+  const wrap  = document.getElementById('expense-table-wrap');
+  const fade  = document.getElementById('expense-fade');
+  const label = document.getElementById('expense-see-more-label');
+  expenseExpanded.open = !expenseExpanded.open;
+  if (expenseExpanded.open) {
+    wrap.style.maxHeight  = wrap.scrollHeight + 'px';
+    fade.style.opacity    = '0';
+    label.textContent     = 'See less';
+  } else {
+    wrap.style.maxHeight  = '320px';
+    fade.style.opacity    = '1';
+    label.textContent     = 'See more';
+  }
+}
+
+function updateExpenseOverflow() {
+  const wrap    = document.getElementById('expense-table-wrap');
+  const fade    = document.getElementById('expense-fade');
+  const seeMore = document.getElementById('expense-see-more');
+  if (!wrap) return;
+  // Use scrollHeight vs the capped max to detect overflow
+  const overflows = wrap.scrollHeight > 320;
+  seeMore.style.display = overflows ? 'block' : 'none';
+  fade.style.opacity    = (overflows && !expenseExpanded.open) ? '1' : '0';
+  // If expanded, keep max-height in sync with real content height
+  if (expenseExpanded.open) wrap.style.maxHeight = wrap.scrollHeight + 'px';
 }
 
 function renderExpenses() {
@@ -2460,7 +2512,11 @@ function renderExpenses() {
   const badge = document.getElementById('expense-count-badge');
   if (badge) badge.textContent = filtered.length;
 
-  if (!filtered.length) { body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-4)">No expenses for this month</td></tr>'; return; }
+  if (!filtered.length) {
+    body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-4)">No expenses for this month</td></tr>';
+    updateExpenseOverflow();
+    return;
+  }
   const sorted = [...filtered].sort((a,b) => b.date.localeCompare(a.date));
   body.innerHTML = sorted.map(e => {
     const cardObj = state.cards.find(c => c.id === e.card);
@@ -2478,6 +2534,8 @@ function renderExpenses() {
       <td><button class="ctx-btn" onclick="openCtx(event, () => editExpense('${e.id}'), () => { removeItem('expenses','${e.id}',renderExpenses,renderBudgets,updateSummary,renderCards); })">•••</button></td>
     </tr>`;
   }).join('');
+  // Defer overflow check so DOM has painted
+  requestAnimationFrame(updateExpenseOverflow);
 }
 
 function updateExpenseCategorySelect() {
@@ -4317,7 +4375,6 @@ async function autoConnectFirebase() {
   setSyncStatus('loading', '… Connecting');
   try {
     await initFirebase(FIREBASE_CONFIG);
-    // onAuthStateChanged inside initFirebase will call showAppScreen or showAuthScreen
   } catch(e) {
     console.error('Firebase init error:', e);
     setSyncStatus('error', '✕ Connection failed');
