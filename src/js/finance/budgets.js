@@ -141,13 +141,13 @@ export function renderBudgets() {
 export function editBudget(id) {
   const b = state.budgets.find(x => x.id === id);
   if (!b) return;
-  document.getElementById('budget-name').value  = b.name;
-  document.getElementById('budget-limit').value = b.limit;
-  document.getElementById('budget-color').value = b.color;
+  document.getElementById('b-name').value  = b.name;
+  document.getElementById('b-limit').value = b.limit;
+  document.getElementById('b-color').value = b.color;
   openEditModal('modal-add-budget', 'Edit Budget', 'Save Changes', () => {
-    b.name  = document.getElementById('budget-name').value.trim()  || b.name;
-    b.limit = parseFloat(document.getElementById('budget-limit').value) || b.limit;
-    b.color = document.getElementById('budget-color').value;
+    b.name  = document.getElementById('b-name').value.trim()  || b.name;
+    b.limit = parseFloat(document.getElementById('b-limit').value) || b.limit;
+    b.color = document.getElementById('b-color').value;
     closeModal('modal-add-budget');
     resetModalToAdd('modal-add-budget', 'Add Budget Category', 'Add Category', addBudgetCategory);
     renderBudgets(); updateExpenseCategorySelect(); updateSummary(); autoSave();

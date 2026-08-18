@@ -1,9 +1,13 @@
 import { state, financeMonthStr } from '../state.js';
 import { fmt, uid, clearFields, today, autoSave, showLoot } from '../utils.js';
-import { closeModal, openEditModal, resetModalToAdd } from '../modals.js';
+import { closeModal, openModal, openEditModal, resetModalToAdd } from '../modals.js';
 import { updateSummary } from './summary.js';
+import { openDetailSheet, refreshDetailSheet } from '../detail-sheet.js';
 
 // ═══════════════════ INCOME ═══════════════════
+
+const PREVIEW_COUNT = 3;
+const INCOME_TYPE_COLORS = { Salary:'tag-green', Freelance:'tag-blue', Investment:'tag-purple', 'Side Hustle':'tag-yellow', Bonus:'tag-yellow', Gift:'tag-blue', Other:'tag-purple' };
 
 export function addIncome() {
   const name = document.getElementById('i-name').value.trim();
@@ -18,28 +22,42 @@ export function addIncome() {
   renderIncome(); updateSummary();
 }
 
-export function renderIncome() {
-  const body = document.getElementById('income-body');
-  const typeColors = { Salary:'tag-green', Freelance:'tag-blue', Investment:'tag-purple', 'Side Hustle':'tag-yellow', Bonus:'tag-yellow', Gift:'tag-blue', Other:'tag-purple' };
-  const ms = financeMonthStr();
-  const filtered = state.income.filter(i => i.date.startsWith(ms));
+function incomeRowHtml(i) {
+  return `<div class="list-row">
+    <div class="list-row-main">
+      <div class="list-row-title">${i.name}</div>
+      <div class="list-row-meta">
+        <span>${i.date}</span>
+        <span class="tag ${INCOME_TYPE_COLORS[i.type] || 'tag-green'}">${i.type}</span>
+        ${i.notes ? `<span>${i.notes}</span>` : ''}
+      </div>
+    </div>
+    <div class="list-row-value green">${fmt(i.amount)}</div>
+    <button class="ctx-btn" onclick="openCtx(event, () => editIncome('${i.id}'), () => { removeItem('income','${i.id}',renderIncome,updateSummary); })">•••</button>
+  </div>`;
+}
 
-  if (!filtered.length) {
-    body.innerHTML = '<tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--text-4)">No income for this month</td></tr>';
+function monthIncomeSorted() {
+  const ms = financeMonthStr();
+  return state.income.filter(i => i.date.startsWith(ms)).sort((a,b) => b.date.localeCompare(a.date));
+}
+
+export function renderIncome() {
+  const previewEl = document.getElementById('income-preview-list');
+  const viewAllBtn = document.getElementById('income-view-all-btn');
+  const ms = financeMonthStr();
+  const sorted = monthIncomeSorted();
+
+  if (!sorted.length) {
+    previewEl.innerHTML = '<div class="empty"><span class="empty-icon">💵</span>No income for this month</div>';
+    viewAllBtn.style.display = 'none';
   } else {
-    const sorted = [...filtered].sort((a,b) => b.date.localeCompare(a.date));
-    body.innerHTML = sorted.map(i => `
-      <tr>
-        <td style="color:var(--text-3)">${i.date}</td>
-        <td style="font-weight:600">${i.name}</td>
-        <td><span class="tag ${typeColors[i.type] || 'tag-green'}">${i.type}</span></td>
-        <td style="font-weight:600;color:var(--green)">${fmt(i.amount)}</td>
-        <td style="color:var(--text-3)">${i.notes || '—'}</td>
-        <td><button class="ctx-btn" onclick="openCtx(event, () => editIncome('${i.id}'), () => { removeItem('income','${i.id}',renderIncome,updateSummary); })">•••</button></td>
-      </tr>`).join('');
+    previewEl.innerHTML = sorted.slice(0, PREVIEW_COUNT).map(incomeRowHtml).join('');
+    viewAllBtn.style.display = sorted.length > PREVIEW_COUNT ? '' : 'none';
+    viewAllBtn.textContent = `View All (${sorted.length})`;
   }
 
-  const thisMonth = filtered.reduce((s,i) => s + i.amount, 0);
+  const thisMonth = sorted.reduce((s,i) => s + i.amount, 0);
   const allTime = state.income.reduce((s,i) => s + i.amount, 0);
   document.getElementById('income-this-month').textContent = fmt(thisMonth);
   document.getElementById('income-all-time').textContent = fmt(allTime);
@@ -52,6 +70,20 @@ export function renderIncome() {
       ? `<span class="green">▲ ${fmt(delta)} surplus</span>`
       : `<span class="red">▼ ${fmt(Math.abs(delta))} deficit</span>`;
   } else { vsEl.textContent = '—'; }
+
+  refreshDetailSheet();
+}
+
+export function openIncomeDetail() {
+  openDetailSheet('All Income', () => openModal('modal-add-income'), renderIncomeDetailBody);
+}
+
+function renderIncomeDetailBody() {
+  const body = document.getElementById('detail-sheet-body');
+  const sorted = monthIncomeSorted();
+  body.innerHTML = sorted.length
+    ? sorted.map(incomeRowHtml).join('')
+    : '<div class="empty"><span class="empty-icon">💵</span>No income for this month</div>';
 }
 
 // ── INCOME EDIT ───────────────────────────────────────────

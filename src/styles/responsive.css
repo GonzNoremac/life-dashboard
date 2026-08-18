@@ -120,6 +120,11 @@
   /* Hide non-critical table columns on mobile */
   .table-col-hide { display: none !important; }
 
+  /* ── LIST ROWS: tighten the Expenses/Bills/Income/Assets card previews ── */
+  .list-row, .list-row-wrap { padding: 0.6rem 0; }
+  .list-row-title { font-size: 12px; }
+  .list-row-value { font-size: 13px; }
+
   /* ── MODALS: full bottom sheet ── */
   .modal-overlay {
     align-items: flex-end;
@@ -143,24 +148,6 @@
 
   /* ── HERO STAT CARDS: tighter ── */
   .hero-card, .blue-card, .green-card { padding: 0.875rem; }
-
-  /* ── BILLS TABLE: show only essential columns ── */
-  #bills-body td:nth-child(4),
-  #bills-body td:nth-child(5),
-  #bills-body th:nth-child(4),
-  #bills-body th:nth-child(5) { display: none; }
-
-  /* ── EXPENSE TABLE: hide notes/date column ── */
-  #expense-body td:nth-child(1),
-  #expense-body th:nth-child(1) { display: none; }
-
-  /* ── INCOME TABLE ── */
-  #income-body td:nth-child(5),
-  #income-body th:nth-child(5) { display: none; }
-
-  /* ── ASSET TABLE ── */
-  #asset-body td:nth-child(4),
-  #asset-body th:nth-child(4) { display: none; }
 
   /* ── YEAR CHART: shorter canvas ── */
   #year-bar-chart { height: 160px !important; }

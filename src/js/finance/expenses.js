@@ -1,12 +1,15 @@
 import { state, financeMonthStr } from '../state.js';
 import { fmt, uid, clearFields, today, autoSave, showLoot } from '../utils.js';
-import { closeModal, openEditModal, resetModalToAdd } from '../modals.js';
+import { closeModal, openModal, openEditModal, resetModalToAdd } from '../modals.js';
 import { renderBudgets } from './budgets.js';
 import { renderIncome } from './income.js';
 import { renderCards } from './cards.js';
 import { updateSummary } from './summary.js';
+import { openDetailSheet, refreshDetailSheet } from '../detail-sheet.js';
 
 // ═══════════════════ FINANCE — EXPENSES ═══════════════════
+
+const PREVIEW_COUNT = 3;
 
 export function addExpense() {
   const desc = document.getElementById('e-desc').value.trim();
@@ -21,70 +24,59 @@ export function addExpense() {
   renderExpenses(); renderBudgets(); renderIncome(); renderCards(); updateSummary();
 }
 
-export const expenseExpanded = { open: false };
-
-export function toggleExpenseExpand() {
-  const wrap  = document.getElementById('expense-table-wrap');
-  const fade  = document.getElementById('expense-fade');
-  const label = document.getElementById('expense-see-more-label');
-  expenseExpanded.open = !expenseExpanded.open;
-  if (expenseExpanded.open) {
-    wrap.style.maxHeight  = wrap.scrollHeight + 'px';
-    fade.style.opacity    = '0';
-    label.textContent     = 'See less';
-  } else {
-    wrap.style.maxHeight  = '320px';
-    fade.style.opacity    = '1';
-    label.textContent     = 'See more';
-  }
+function expenseRowHtml(e) {
+  const cardObj = state.cards.find(c => c.id === e.card);
+  const cardBadge = cardObj
+    ? `<span class="mini-badge" style="background:${cardObj.color}18;color:${cardObj.color}"><span class="mini-dot" style="background:${cardObj.color}"></span>${cardObj.name}</span>`
+    : '';
+  return `<div class="list-row">
+    <div class="list-row-main">
+      <div class="list-row-title">${e.desc}</div>
+      <div class="list-row-meta">
+        <span>${e.date}</span>
+        ${e.cat ? `<span class="tag tag-blue">${e.cat}</span>` : ''}
+        ${cardBadge}
+      </div>
+    </div>
+    <div class="list-row-value red">${fmt(e.amount)}</div>
+    <button class="ctx-btn" onclick="openCtx(event, () => editExpense('${e.id}'), () => { removeItem('expenses','${e.id}',renderExpenses,renderBudgets,updateSummary,renderCards); })">•••</button>
+  </div>`;
 }
 
-export function updateExpenseOverflow() {
-  const wrap    = document.getElementById('expense-table-wrap');
-  const fade    = document.getElementById('expense-fade');
-  const seeMore = document.getElementById('expense-see-more');
-  if (!wrap) return;
-  // Use scrollHeight vs the capped max to detect overflow
-  const overflows = wrap.scrollHeight > 320;
-  seeMore.style.display = overflows ? 'block' : 'none';
-  fade.style.opacity    = (overflows && !expenseExpanded.open) ? '1' : '0';
-  // If expanded, keep max-height in sync with real content height
-  if (expenseExpanded.open) wrap.style.maxHeight = wrap.scrollHeight + 'px';
+function monthExpensesSorted() {
+  const ms = financeMonthStr();
+  return state.expenses.filter(e => e.date.startsWith(ms)).sort((a,b) => b.date.localeCompare(a.date));
 }
 
 export function renderExpenses() {
-  const body = document.getElementById('expense-body');
-  const ms = financeMonthStr();
-  const filtered = state.expenses.filter(e => e.date.startsWith(ms));
+  const previewEl = document.getElementById('expense-preview-list');
+  const viewAllBtn = document.getElementById('expense-view-all-btn');
+  const sorted = monthExpensesSorted();
 
-  // Update count badge
   const badge = document.getElementById('expense-count-badge');
-  if (badge) badge.textContent = filtered.length;
+  if (badge) badge.textContent = sorted.length;
 
-  if (!filtered.length) {
-    body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-4)">No expenses for this month</td></tr>';
-    updateExpenseOverflow();
-    return;
+  if (!sorted.length) {
+    previewEl.innerHTML = '<div class="empty"><span class="empty-icon">🧾</span>No expenses for this month</div>';
+    viewAllBtn.style.display = 'none';
+  } else {
+    previewEl.innerHTML = sorted.slice(0, PREVIEW_COUNT).map(expenseRowHtml).join('');
+    viewAllBtn.style.display = sorted.length > PREVIEW_COUNT ? '' : 'none';
+    viewAllBtn.textContent = `View All (${sorted.length})`;
   }
-  const sorted = [...filtered].sort((a,b) => b.date.localeCompare(a.date));
-  body.innerHTML = sorted.map(e => {
-    const cardObj = state.cards.find(c => c.id === e.card);
-    const cardBadge = cardObj
-      ? `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;background:${cardObj.color}18;color:${cardObj.color}">
-           <span style="width:7px;height:7px;border-radius:50%;background:${cardObj.color};display:inline-block"></span>${cardObj.name}
-         </span>`
-      : '<span style="color:var(--text-4);font-size:12px">—</span>';
-    return `<tr>
-      <td style="color:var(--text-3)">${e.date}</td>
-      <td style="font-weight:500">${e.desc}</td>
-      <td>${e.cat ? `<span class="tag tag-blue">${e.cat}</span>` : '<span style="color:var(--text-4)">—</span>'}</td>
-      <td>${cardBadge}</td>
-      <td style="font-weight:600;color:var(--red)">${fmt(e.amount)}</td>
-      <td><button class="ctx-btn" onclick="openCtx(event, () => editExpense('${e.id}'), () => { removeItem('expenses','${e.id}',renderExpenses,renderBudgets,updateSummary,renderCards); })">•••</button></td>
-    </tr>`;
-  }).join('');
-  // Defer overflow check so DOM has painted
-  requestAnimationFrame(updateExpenseOverflow);
+  refreshDetailSheet();
+}
+
+export function openExpenseDetail() {
+  openDetailSheet('All Expenses', () => openModal('modal-add-expense'), renderExpenseDetailBody);
+}
+
+function renderExpenseDetailBody() {
+  const body = document.getElementById('detail-sheet-body');
+  const sorted = monthExpensesSorted();
+  body.innerHTML = sorted.length
+    ? sorted.map(expenseRowHtml).join('')
+    : '<div class="empty"><span class="empty-icon">🧾</span>No expenses for this month</div>';
 }
 
 export function updateExpenseCategorySelect() {

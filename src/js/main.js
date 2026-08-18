@@ -25,6 +25,7 @@ import * as foods from './meals/foods.js';
 import * as water from './meals/water.js';
 
 import * as yearOverview from './year-overview.js';
+import * as detailSheet from './detail-sheet.js';
 
 import * as fbConfig from './firebase/config.js';
 import * as fbAuth from './firebase/auth.js';
@@ -42,7 +43,7 @@ import { initApp } from './init.js';
 const modules = [
   stateMod, utils, nav, modals, theme,
   budgets, expenses, cards, bills, savings, debts, assets, income, summary,
-  calendar, workouts, metrics, foods, water, yearOverview,
+  calendar, workouts, metrics, foods, water, yearOverview, detailSheet,
   fbConfig, fbAuth, fbSync, fbSettings,
 ];
 modules.forEach(ns => Object.assign(window, ns));

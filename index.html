@@ -124,25 +124,10 @@
           <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-expense')">+ Add</button>
         </span>
       </div>
-      <!-- Table clipped to preview height -->
-      <div style="position:relative;flex:1">
-        <div id="expense-table-wrap" class="table-wrap" style="max-height:640px;overflow:hidden;transition:max-height 0.35s ease">
-          <table>
-            <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Card</th><th>Amount</th><th></th></tr></thead>
-            <tbody id="expense-body">
-              <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-4)">No expenses logged</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <!-- Gradient fade — hidden when expanded -->
-        <div id="expense-fade" style="position:absolute;bottom:0;left:0;right:0;height:64px;background:linear-gradient(to bottom, transparent, var(--surface));pointer-events:none;transition:opacity 0.2s"></div>
+      <div id="expense-preview-list">
+        <div class="empty"><span class="empty-icon">🧾</span>No expenses logged</div>
       </div>
-      <!-- See more / See less button -->
-      <div id="expense-see-more" style="text-align:center;padding-top:0.5rem;display:none">
-        <button class="btn btn-ghost btn-sm" style="width:100%;font-size:12px" onclick="toggleExpenseExpand()">
-          <span id="expense-see-more-label">See more</span>
-        </button>
-      </div>
+      <button class="btn btn-ghost btn-sm view-all-btn" id="expense-view-all-btn" style="display:none" onclick="openExpenseDetail()">View All</button>
     </div>
     </div>
   </div>
@@ -156,14 +141,10 @@
         <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-bill')">+ Add</button>
       </div>
     </div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Bill</th><th>Category</th><th>Amount</th><th>Due Day</th><th>Recurrence</th><th>Card</th><th>Status</th><th></th></tr></thead>
-        <tbody id="bills-body">
-          <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-4)">No bills added — bills will auto-log as expenses on their due date</td></tr>
-        </tbody>
-      </table>
+    <div id="bills-preview-list">
+      <div class="empty"><span class="empty-icon">🧾</span>No bills added — bills will auto-log as expenses on their due date</div>
     </div>
+    <button class="btn btn-ghost btn-sm view-all-btn" id="bills-view-all-btn" style="display:none" onclick="openBillDetail()">View All</button>
     <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
       <span style="font-size:13px;font-weight:500;color:var(--text-3)">Monthly Bills Total</span>
       <span class="red" style="font-size:18px;font-weight:700;letter-spacing:-0.5px;font-variant-numeric:tabular-nums" id="total-bills-display">$0/mo</span>
@@ -198,14 +179,10 @@
       Assets
       <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-asset')">+ Add</button>
     </div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Asset</th><th>Type</th><th>Value</th><th>Notes</th><th></th></tr></thead>
-        <tbody id="asset-body">
-          <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-4)">No assets added</td></tr>
-        </tbody>
-      </table>
+    <div id="asset-preview-list">
+      <div class="empty"><span class="empty-icon">🏦</span>No assets added</div>
     </div>
+    <button class="btn btn-ghost btn-sm view-all-btn" id="asset-view-all-btn" style="display:none" onclick="openAssetDetail()">View All</button>
     <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
       <span style="font-size:13px;font-weight:500;color:var(--text-3)">Total Assets</span>
       <span class="green" style="font-size:18px;font-weight:700;letter-spacing:-0.5px;font-variant-numeric:tabular-nums" id="total-assets-display">$0</span>
@@ -229,14 +206,10 @@
       Income
       <button class="btn btn-sm btn-primary" onclick="openModal('modal-add-income')">+ Log</button>
     </div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Date</th><th>Source</th><th>Type</th><th>Amount</th><th>Notes</th><th></th></tr></thead>
-        <tbody id="income-body">
-          <tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--text-4)">No income logged yet</td></tr>
-        </tbody>
-      </table>
+    <div id="income-preview-list">
+      <div class="empty"><span class="empty-icon">💵</span>No income logged yet</div>
     </div>
+    <button class="btn btn-ghost btn-sm view-all-btn" id="income-view-all-btn" style="display:none" onclick="openIncomeDetail()">View All</button>
     <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem">
       <div style="display:flex;gap:2rem">
         <div>
@@ -1220,6 +1193,16 @@
   <button class="ctx-item" id="ctx-edit" onclick="ctxEdit()">✏️ Edit</button>
   <div class="ctx-divider"></div>
   <button class="ctx-item danger" id="ctx-delete" onclick="ctxDelete()">🗑 Delete</button>
+</div>
+
+<!-- DETAIL SHEET (full-screen list view for Expenses/Bills/Income/Assets) -->
+<div class="detail-sheet" id="detail-sheet">
+  <div class="detail-sheet-header">
+    <button class="detail-sheet-back" onclick="closeDetailSheet()">‹ Back</button>
+    <div class="detail-sheet-title" id="detail-sheet-title">Title</div>
+    <button class="btn btn-sm btn-primary" id="detail-sheet-add-btn">+ Add</button>
+  </div>
+  <div class="detail-sheet-body" id="detail-sheet-body"></div>
 </div>
 
 <!-- TOAST -->

@@ -1,9 +1,16 @@
 import { state } from '../state.js';
 import { fmt, uid, clearFields, autoSave } from '../utils.js';
-import { closeModal, openEditModal, resetModalToAdd } from '../modals.js';
+import { closeModal, openModal, openEditModal, resetModalToAdd } from '../modals.js';
 import { updateSummary } from './summary.js';
+import { openDetailSheet, refreshDetailSheet } from '../detail-sheet.js';
 
 // ═══════════════════ ASSETS ═══════════════════
+
+const PREVIEW_COUNT = 3;
+const ASSET_TYPE_COLORS = {
+  'Cash / Bank': 'tag-green', 'Investment': 'tag-blue', 'Real Estate': 'tag-yellow',
+  'Vehicle': 'tag-purple', 'Retirement (401k/IRA)': 'tag-purple', 'Crypto': 'tag-yellow', 'Other': 'tag-purple'
+};
 
 export function addAsset() {
   const name = document.getElementById('a-name').value.trim();
@@ -17,32 +24,54 @@ export function addAsset() {
   renderAssets(); updateSummary();
 }
 
+function assetRowHtml(a) {
+  return `<div class="list-row-wrap">
+    <div class="list-row-top">
+      <div class="list-row-main">
+        <div class="list-row-title">${a.name}</div>
+        <div class="list-row-meta">
+          <span class="tag ${ASSET_TYPE_COLORS[a.type] || 'tag-purple'}">${a.type}</span>
+          ${a.notes ? `<span>${a.notes}</span>` : ''}
+        </div>
+      </div>
+      <div class="list-row-value green">${fmt(a.value)}</div>
+    </div>
+    <div class="list-row-extra">
+      <div style="display:flex;gap:0.4rem;flex:1">
+        <input type="number" placeholder="New value" id="aupd-${a.id}" style="flex:1" onkeydown="if(event.key==='Enter')updateAsset('${a.id}')">
+        <button class="btn btn-ghost btn-sm" onclick="updateAsset('${a.id}')">Update</button>
+      </div>
+      <button class="ctx-btn" onclick="openCtx(event, () => editAsset('${a.id}'), () => { removeItem('assets','${a.id}',renderAssets,updateSummary); })">•••</button>
+    </div>
+  </div>`;
+}
+
 export function renderAssets() {
-  const body = document.getElementById('asset-body');
+  const previewEl = document.getElementById('asset-preview-list');
+  const viewAllBtn = document.getElementById('asset-view-all-btn');
   const total = state.assets.reduce((s, a) => s + a.value, 0);
   document.getElementById('total-assets-display').textContent = fmt(total);
-  const typeColors = {
-    'Cash / Bank': 'green', 'Investment': 'blue', 'Real Estate': 'yellow',
-    'Vehicle': 'purple', 'Retirement (401k/IRA)': 'accent', 'Crypto': 'yellow', 'Other': 'purple'
-  };
-  const tagClass = { 'green':'tag-green','blue':'tag-blue','yellow':'tag-yellow','purple':'tag-purple','accent':'tag-purple' };
-  if (!state.assets.length) { body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-dim)">No assets added</td></tr>'; return; }
-  body.innerHTML = state.assets.map(a => {
-    const col = typeColors[a.type] || 'purple';
-    return `<tr>
-      <td style="font-weight:600">${a.name}</td>
-      <td><span class="tag ${tagClass[col] || 'tag-purple'}">${a.type}</span></td>
-      <td class="green">${fmt(a.value)}</td>
-      <td class="muted">${a.notes || '—'}</td>
-      <td>
-        <div style="display:flex;gap:0.4rem;align-items:center">
-          <input type="number" placeholder="New value" id="aupd-${a.id}" style="width:110px;padding:0.3rem 0.5rem;font-size:11px" onkeydown="if(event.key==='Enter')updateAsset('${a.id}')">
-          <button class="btn btn-ghost btn-sm" onclick="updateAsset('${a.id}')">Update</button>
-          <button class="ctx-btn" onclick="openCtx(event, () => editAsset('${a.id}'), () => { removeItem('assets','${a.id}',renderAssets,updateSummary); })">•••</button>
-        </div>
-      </td>
-    </tr>`;
-  }).join('');
+
+  if (!state.assets.length) {
+    previewEl.innerHTML = '<div class="empty"><span class="empty-icon">🏦</span>No assets added</div>';
+    viewAllBtn.style.display = 'none';
+  } else {
+    previewEl.innerHTML = state.assets.slice(0, PREVIEW_COUNT).map(assetRowHtml).join('');
+    viewAllBtn.style.display = state.assets.length > PREVIEW_COUNT ? '' : 'none';
+    viewAllBtn.textContent = `View All (${state.assets.length})`;
+  }
+  refreshDetailSheet();
+}
+
+export function openAssetDetail() {
+  openDetailSheet('All Assets', () => openModal('modal-add-asset'), renderAssetDetailBody);
+}
+
+function renderAssetDetailBody() {
+  const body = document.getElementById('detail-sheet-body');
+  body.innerHTML = state.assets.length
+    ? state.assets.map(assetRowHtml).join('')
+    : '<div class="empty"><span class="empty-icon">🏦</span>No assets added</div>';
 }
 
 export function updateAsset(id) {
